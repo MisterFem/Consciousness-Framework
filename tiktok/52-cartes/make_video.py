@@ -17,7 +17,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 W, H, S, FPS = 180, 320, 6, 30
-DUR = 61.5  # recalculé plus bas (scène 8)
+DUR = 0.0  # calculé plus bas (scène 8)
 SR = 44100
 
 # ---------------------------------------------------------------- palette
@@ -257,7 +257,7 @@ SFX = []  # (temps, type, param)
 class T:
     """Texte en machine à écrire, avec ses 'blips' enregistrés pour l'audio."""
 
-    def __init__(self, text, t0, y, cps=26, blip=True, **kw):
+    def __init__(self, text, t0, y, cps=22, blip=True, **kw):
         self.text, self.t0, self.y, self.cps, self.kw = text, t0, y, cps, kw
         if blip:
             n = 0
@@ -423,14 +423,25 @@ def scene(t0, t1):
     return deco
 
 
+def read(tx):
+    """Temps laissé pour finir de lire un texte une fois tapé."""
+    t_ = tx.text if isinstance(tx, T) else tx
+    return 1.0 + sum(c not in " *^" for c in t_) / 30
+
+
+def after(tx, extra=0.0):
+    return tx.end() + read(tx) + extra
+
+
 # 1 ─ accroche ------------------------------------------------------------
 FAN = [('A', 'S'), ('K', 'H'), ('Q', 'D'), ('J', 'C'), ('T', 'H'), ('7', 'S'), ('2', 'D')]
 S1_T = T("QUAND TU MÉLANGES BIEN UN PAQUET DE *52 CARTES*...", 1.7, 205, scale=1)
+S2 = after(S1_T)
 SFX.append((0.0, 'crash', None))
 SFX.append((1.0, 'whoosh', None))
 
 
-@scene(0.0, 5.5)
+@scene(0.0, S2)
 def s1(img, t):
     title(img, "LE SAVAIS-TU ?", t, 0.1, y=40)
     open_ = ease_out_back((t - 0.9) / 0.6)
@@ -446,16 +457,17 @@ def s1(img, t):
 
 # 2 ─ tornade de cartes --------------------------------------------------
 S2_T = T("... TU OBTIENS PRESQUE À COUP SÛR UN ORDRE QUE *PERSONNE* N'A JAMAIS VU DANS TOUTE L'HISTOIRE !",
-         6.1, 190)
+         S2 + 0.6, 190)
+S3_START = after(S2_T)
 ORBIT = random.Random(7).sample(DECK, 12)
 for k in range(6):
-    SFX.append((5.6 + k * 0.45, 'whoosh', None))
+    SFX.append((S2 + 0.1 + k * 0.45, 'whoosh', None))
 
 
-@scene(5.5, 11.5)
+@scene(S2, S3_START)
 def s2(img, t):
-    lt = t - 5.5
-    theta = 2.0 * lt + 0.9 * lt * lt
+    lt = t - S2
+    theta = 2.0 * lt + 0.9 * min(lt, 3) ** 2 + 5.4 * max(lt - 3, 0)
     items = []
     for i, c in enumerate(ORBIT):
         th = theta + i * 2 * math.pi / len(ORBIT)
@@ -468,22 +480,22 @@ def s2(img, t):
 
 
 # 3 ─ pourquoi ? 52 x 51 x ... ------------------------------------------
-S3_START = 11.5
 GRID_ORDER = random.Random(2024).sample(DECK, 52)
 PLACE_T = []
-tt = 12.3
+tt = S3_START + 0.9
 for k in range(52):
     PLACE_T.append(tt)
-    tt += 0.75 if k < 3 else max(0.03, 0.14 - (k - 3) * 0.004)
+    tt += 1.6 if k < 3 else max(0.03, 0.14 - (k - 3) * 0.004)
 for k, pt in enumerate(PLACE_T):
     SFX.append((pt, 'place', k))
 S3_F = T("52 × 51 × 50 × ... × 1", PLACE_T[-1] + 0.4, 160, cps=24)
 S3_EQ_T = S3_F.end() + 0.35
 impact(S3_EQ_T, 2)
-S3_N = T("(ON APPELLE ÇA *FACTORIELLE 52*)", S3_EQ_T + 0.8, 222, color=LGREY)
+S3_N = T("(ON APPELLE ÇA *FACTORIELLE 52*)", S3_EQ_T + 1.2, 222, color=LGREY)
+S4 = after(S3_N, 0.5)
 
 
-@scene(11.5, 21.0)
+@scene(S3_START, S4)
 def s3(img, t):
     title(img, "POURQUOI ?", t, S3_START + 0.05, y=22)
     x0, y0 = 13, 58
@@ -501,7 +513,7 @@ def s3(img, t):
         n = placed
         label = "1RE CARTE" if n == 1 else ("DERNIÈRE" if n == 52 else f"{n}E CARTE")
         draw_text(img, f"{label} : *{53 - n} CHOIX*", 90, 130)
-        if n <= 3:
+        if t < S3_F.t0:
             draw_text(img, "PEU IMPORTE LES CARTES DÉJÀ POSÉES, IL EN RESTE UNE DE MOINS",
                       90, 160, LGREY, maxw=140)
     S3_F.draw(img, t)
@@ -513,21 +525,24 @@ def s3(img, t):
 
 # 4 ─ le nombre ----------------------------------------------------------
 FACT = str(math.factorial(52))
-S4_D0 = 22.0
+S4_D0 = S4 + 1.0
 S4_CPS = 40
 for i in range(0, len(FACT), 2):
     SFX.append((S4_D0 + i / S4_CPS, 'blip', None))
 S4_APPROX = S4_D0 + len(FACT) / S4_CPS + 0.5
 impact(S4_APPROX, 4)
 SFX.append((S4_APPROX + 0.05, 'coin', None))
-S4_T1 = T("UN NOMBRE À *68 CHIFFRES* !", S4_APPROX + 0.9, 176)
+S4_T1 = T("UN NOMBRE À *68 CHIFFRES* !", S4_APPROX + 1.4, 176)
 S4_T2 = T("BEAUCOUP TROP GRAND POUR QUE NOTRE CERVEAU PUISSE L'IMAGINER...",
-          S4_APPROX + 2.2, 204, color=LGREY)
+          after(S4_T1), 204, color=LGREY)
 
 
-@scene(21.0, 29.5)
+S5 = after(S4_T2)
+
+
+@scene(S4, S5)
 def s4(img, t):
-    title(img, "52 ! =", t, 21.05, y=24)
+    title(img, "52 ! =", t, S4 + 0.05, y=24)
     n = int((t - S4_D0) * S4_CPS) + 1 if t >= S4_D0 else 0
     for i, d in enumerate(FACT[:n]):
         x = 22 + (i % 17) * 8
@@ -580,16 +595,17 @@ def earth(t):
 
 
 S5_T1 = T("C'EST PLUS QUE LE NOMBRE D'*ATOMES* QUI COMPOSENT LA TERRE ENTIÈRE ! (~10^50)",
-          30.0, 150)
-S5_T2 = T("52 ! EST *600 MILLIONS DE MILLIARDS DE FOIS* PLUS GRAND.", 33.4, 202)
-SFX.append((29.6, 'whoosh', None))
-SFX.append((33.4, 'coin', None))
+          S5 + 0.8, 150)
+S5_T2 = T("52 ! EST *600 MILLIONS DE MILLIARDS DE FOIS* PLUS GRAND.", after(S5_T1), 202)
+S6 = after(S5_T2)
+SFX.append((S5 + 0.1, 'whoosh', None))
+SFX.append((S5_T2.t0, 'coin', None))
 ATOMS = [(random.Random(i).random() * 6.28, 36 + i % 5 * 3, 0.8 + (i % 7) * 0.25) for i in range(28)]
 
 
-@scene(29.5, 37.0)
+@scene(S5, S6)
 def s5(img, t):
-    lt = t - 29.5
+    lt = t - S5
     cy = 82 + int(math.sin(lt * 2) * 2)
     p = ease_out_back(lt / 0.6)
     for i, (ph, r, sp) in enumerate(ATOMS):
@@ -612,12 +628,13 @@ def s5(img, t):
 
 
 # 6 ─ depuis le big bang -------------------------------------------------
-BB_T = 37.4
+BB_T = S6 + 0.4
 impact(BB_T, 3)
 S6_T1 = T("IMAGINE : *8 MILLIARDS* D'HUMAINS QUI MÉLANGENT 1 PAQUET CHAQUE SECONDE DEPUIS LE *BIG BANG*...",
-          38.2, 132)
-S6_T2 = T("... ILS N'AURAIENT MÊME PAS TESTÉ *1 ORDRE SUR 10^40* !", 42.6, 198)
-SFX.append((42.6, 'whoosh', None))
+          BB_T + 1.6, 132)
+S6_T2 = T("... ILS N'AURAIENT MÊME PAS TESTÉ *1 ORDRE SUR 10^40* !", after(S6_T1), 198)
+SFX.append((S6_T2.t0, 'whoosh', None))
+S7 = after(S6_T2, 0.5)
 _pr = random.Random(11)
 PARTS = [(_pr.random() * 6.28, 20 + _pr.random() * 40, _pr.choice([YELLOW, ORANGE, RED, WHITE, PINK]))
          for _ in range(90)]
@@ -626,7 +643,7 @@ PEOPLE = [(_pr.choice([PEACH, BROWN, (120, 70, 40), (230, 170, 120)]),
           for _ in range(3 * 22)]
 
 
-@scene(37.0, 47.5)
+@scene(S6, S7)
 def s6(img, t):
     lt = t - BB_T
     if lt >= 0:
@@ -644,8 +661,8 @@ def s6(img, t):
             draw_text(img, "BIG BANG", 90, 20, ORANGE, maxw=170)
             draw_text(img, "IL Y A 13,8 MILLIARDS D'ANNÉES", 90, 72, LGREY, maxw=170)
     # foule de petits humains qui mélangent
-    if t > 38.2:
-        n = min(len(PEOPLE), int((t - 38.2) * 40))
+    if t > S6_T1.t0:
+        n = min(len(PEOPLE), int((t - S6_T1.t0) * 40))
         for i, (skin, shirt, ph) in enumerate(PEOPLE[:n]):
             row, col = divmod(i, 22)
             x = 14 + col * 7 + (row % 2) * 3
@@ -660,24 +677,24 @@ def s6(img, t):
 
 
 # 7 ─ bonus 7 mélanges + UNIQUE ------------------------------------------
-S7_T1 = T("BONUS : IL SUFFIT DE *7 MÉLANGES À L'AMÉRICAINE* POUR BIEN MÉLANGER UN PAQUET.", 47.8, 28)
-RIFFLE0 = S7_T1.end() + 0.6
-RIFFLE_DT = 0.38
+S7_T1 = T("BONUS : IL SUFFIT DE *7 MÉLANGES À L'AMÉRICAINE* POUR BIEN MÉLANGER UN PAQUET.", S7 + 0.3, 28)
+RIFFLE0 = S7_T1.end() + 1.0
+RIFFLE_DT = 0.5
 for k in range(7):
     SFX.append((RIFFLE0 + k * RIFFLE_DT, 'riffle', k))
-S7_T2 = T("DONC TON MÉLANGE EST SÛREMENT...", RIFFLE0 + 7 * RIFFLE_DT + 0.3, 186)
-UNIQUE_T = S7_T2.end() + 0.4
+S7_T2 = T("DONC TON MÉLANGE EST SÛREMENT...", max(after(S7_T1), RIFFLE0 + 7 * RIFFLE_DT + 0.6), 186)
+UNIQUE_T = S7_T2.end() + 0.7
 impact(UNIQUE_T, 4)
 SFX.append((UNIQUE_T + 0.05, 'sparkle', None))
 
 
-S7_END = UNIQUE_T + 2.4
+S7_END = UNIQUE_T + 3.0
 
 
-@scene(47.5, S7_END)
+@scene(S7, S7_END)
 def s7(img, t):
     S7_T1.draw(img, t)
-    if t >= 47.8:
+    if t >= S7_T1.t0:
         k = int((t - RIFFLE0) / RIFFLE_DT) if t >= RIFFLE0 else -1
         ph = ((t - RIFFLE0) / RIFFLE_DT) % 1 if 0 <= k < 7 else 0
         merge = math.sin(ph * math.pi)
@@ -708,7 +725,7 @@ def s7(img, t):
 # 8 ─ appel à l'action ---------------------------------------------------
 HEART = SUIT7['H']
 S8 = S7_END
-DUR = S8 + 4.0
+DUR = S8 + 5.5
 SFX.append((S8 + 0.1, 'coin', None))
 S8_T = T("ABONNE-TOI POUR PLUS D'ANECDOTES DE MATHS !", S8 + 0.5, 168, cps=30)
 RAIN = [(random.Random(i).randrange(-10, W + 10), random.Random(i + 99).random() * 400,
@@ -830,7 +847,7 @@ def make_audio():
         intro = t < 1.0
         if not intro:
             add(music, t, sq(midi(tone), step, 0.25) * env(int(step * SR), 14), 0.10)
-            if t > 46:
+            if t > S7:
                 add(music, t, sq(midi(tone + 12), step, 0.125) * env(int(step * SR), 20), 0.05)
         if st % 2 == 0:
             r = roots[bar] + (12 if st % 4 == 2 else 0)
