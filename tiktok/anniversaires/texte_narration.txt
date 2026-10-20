@@ -1,0 +1,27 @@
+Dans une classe de 23 élèves, il y a plus d'une chance sur deux que deux d'entre eux aient le même anniversaire.
+
+Ça paraît impossible : il y a 365 jours dans l'année !
+
+Et pourtant, ce sont des maths. C'est le paradoxe des anniversaires.
+
+Le piège, c'est de penser à ton propre anniversaire.
+
+Mais on ne cherche pas quelqu'un né le même jour que toi : on cherche n'importe quelle paire de personnes.
+
+Et avec 23 personnes, il y a déjà 253 paires possibles !
+
+Calculons la chance que personne ne partage son anniversaire.
+
+Le deuxième doit éviter un jour : 364 sur 365. Le troisième, 363 sur 365. Et ainsi de suite.
+
+On multiplie tout… et à 23 personnes, on tombe sous les 50 %.
+
+Donc, plus d'une chance sur deux d'avoir un anniversaire en commun !
+
+Avec 50 personnes, on monte à 97 %. Et avec 70 personnes : 99,9 % !
+
+Alors fais le test : écris ta date d'anniversaire en commentaire…
+
+…et regarde si quelqu'un a la même que toi !
+
+Abonne-toi pour plus d'anecdotes de maths !
