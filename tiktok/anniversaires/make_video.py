@@ -42,7 +42,13 @@ LINES = [
 ]
 SCENE_STARTS = {'imp': 0.8, 'para': 0.8, 'piege': 1.0, 'calc': 1.0, 'graph': 1.0, 'test': 1.0,
                 'paire': 0.4, 'mult': 0.4, 'abo': 0.3}
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/narration.mp3
+# {id: (début, fin)} mesurés sur audio/narration.mp3 (silences > 0,12 s)
+MEASURED = {
+    'hook': (0.0, 5.51), 'imp': (5.96, 9.44), 'para': (9.83, 13.51), 'piege': (14.02, 16.39),
+    'paire': (16.74, 21.45), '253': (21.72, 25.61), 'calc': (26.04, 28.74), 'frac': (29.17, 37.84),
+    'mult': (38.16, 42.24), 'donc': (42.60, 45.57), 'graph': (45.96, 52.93), 'test': (53.36, 56.27),
+    'meme': (56.57, 58.54), 'abo': (58.95, 60.85),
+}
 
 
 def estimate(rate=14.5, pause=0.4):
@@ -212,10 +218,11 @@ for i in range(int((sb('para') - sb('imp')) * 7)):
     SFX.append((sb('imp') + i / 7, 'blip', None))
 
 # 3 ─ le paradoxe -------------------------------------------------------
-PARA_T = N.start('para') + 1.4
+PARA_T = N.V(11.66)  # « C'est le paradoxe... »
 impact(PARA_T, 3)
 SFX.append((PARA_T + 0.05, 'sparkle', None))
-S3_T = N.text("ET POURTANT, CE SONT DES *MATHS*.", 'para', 205, until='para')
+S3_TXT = "ET POURTANT, CE SONT DES *MATHS*."
+S3_T = T(S3_TXT, N.start('para'), 205, cps=len(S3_TXT) / (N.V(11.33) - N.start('para')))
 
 
 @scene(sb('para'), sb('piege'))
@@ -244,7 +251,7 @@ PAIRS = [(i, j) for i in range(23) for j in range(i + 1, 23)]
 _r.shuffle(PAIRS)
 ME_LINES0, ME_LINES1 = N.start('piege') + 0.5, N.stop('piege')
 ALL0, ALL1 = N.start('paire') + 1.0, N.start('253') + 1.0
-BIG253 = N.start('253') + 1.2
+BIG253 = N.stop('253') - 1.4
 impact(BIG253, 3)
 SFX.append((BIG253 + 0.05, 'coin', None))
 for k in range(22):
@@ -329,9 +336,26 @@ def s5(img, t):
 
 # 6 ─ la courbe ----------------------------------------------------------
 GX0, GX1, GY0, GY1, NMAX = 36, 146, 70, 170, 75
-G0, G1 = N.start('graph') - 0.3, N.stop('graph') - 0.5
+# progression de la courbe calée sur la voix : (temps voix, n)
+GKEYS = [(N.start('graph') - 0.4, 0), (N.V(47.3), 50), (N.V(49.5), 70), (N.V(50.6), NMAX)]
+
+
+def n_at(t):
+    for (ta, na), (tb, nb) in zip(GKEYS, GKEYS[1:]):
+        if t < tb:
+            return na + (nb - na) * clamp((t - ta) / (tb - ta))
+    return NMAX
+
+
+def t_at(n):
+    for (ta, na), (tb, nb) in zip(GKEYS, GKEYS[1:]):
+        if n <= nb:
+            return ta + (tb - ta) * (n - na) / (nb - na)
+    return GKEYS[-1][0]
+
+
 MARKS = [(23, "23 : 50,7 %"), (50, "50 : 97 %"), (70, "70 : 99,9 %")]
-MARK_T = [G0 + (G1 - G0) * (m / NMAX) for m, _ in MARKS]
+MARK_T = [t_at(m) for m, _ in MARKS]
 for mt in MARK_T:
     SFX.append((mt, 'coin', None))
 S6_T = N.text("*50 PERSONNES* : 97 %\n*70 PERSONNES* : 99,9 % !", 'graph', 200)
@@ -357,7 +381,7 @@ def s6(img, t):
     draw_text(img, "100%", 18, GY0 - 6, LGREY, shadow=None)
     draw_text(img, "50%", 18, int(gy(0.5)) - 6, LGREY, shadow=None)
     draw_text(img, "PERSONNES", CX + 8, GY1 + 4, LGREY, shadow=None)
-    n_now = NMAX * clamp((t - G0) / (G1 - G0))
+    n_now = n_at(t)
     pts = [(gx(n / 2), gy(p_match(int(n / 2)))) for n in range(int(n_now * 2) + 1)]
     if len(pts) > 1:
         d.line(pts, fill=GREEN, width=2)
