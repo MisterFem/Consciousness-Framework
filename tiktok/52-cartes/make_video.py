@@ -423,20 +423,35 @@ def scene(t0, t1):
     return deco
 
 
-def read(tx):
-    """Temps laissé pour finir de lire un texte une fois tapé."""
-    t_ = tx.text if isinstance(tx, T) else tx
-    return 1.0 + sum(c not in " *^" for c in t_) / 30
+# Narration (audio/narration.mp3) : on y insère des pauses pour laisser lire.
+# Toutes les dates ci-dessous sont données dans le temps de la narration
+# (repérées aux silences) puis converties en temps vidéo par V().
+VOICE = os.path.join(HERE, 'audio', 'narration.mp3')
+GAPS = [(3.7, 0.8), (10.5, 1.0), (26.3, 1.0), (35.1, 1.0), (39.7, 0.5),
+        (42.7, 1.0), (49.2, 0.6), (52.95, 1.2), (57.5, 0.4), (60.25, 1.2)]
+VOICE_END = 62.51
 
 
-def after(tx, extra=0.0):
-    return tx.end() + read(tx) + extra
+def V(tv):
+    return tv + sum(g for c, g in GAPS if c <= tv)
+
+
+def B(c):
+    """Frontière de scène : au milieu de la pause insérée à c."""
+    return V(c) - dict(GAPS)[c] / 2
+
+
+def VT(text, a, b, y, **kw):
+    """Texte tapé pendant que la voix dit la phrase [a, b]."""
+    t0 = V(a)
+    cps = clamp(len(text) / max(0.3, V(b) - t0), 12, 45)
+    return T(text, t0, y, cps=cps, **kw)
 
 
 # 1 ─ accroche ------------------------------------------------------------
 FAN = [('A', 'S'), ('K', 'H'), ('Q', 'D'), ('J', 'C'), ('T', 'H'), ('7', 'S'), ('2', 'D')]
-S1_T = T("QUAND TU MÉLANGES BIEN UN PAQUET DE *52 CARTES*...", 1.7, 205, scale=1)
-S2 = after(S1_T)
+S1_T = VT("QUAND TU MÉLANGES BIEN UN PAQUET DE *52 CARTES*...", 1.05, 3.55, 205)
+S2 = B(3.7)
 SFX.append((0.0, 'crash', None))
 SFX.append((1.0, 'whoosh', None))
 
@@ -456,9 +471,9 @@ def s1(img, t):
 
 
 # 2 ─ tornade de cartes --------------------------------------------------
-S2_T = T("... TU OBTIENS PRESQUE À COUP SÛR UN ORDRE QUE *PERSONNE* N'A JAMAIS VU DANS TOUTE L'HISTOIRE !",
-         S2 + 0.6, 190)
-S3_START = after(S2_T)
+S2_T = VT("... TU OBTIENS PRESQUE À COUP SÛR UN ORDRE QUE *PERSONNE* N'A JAMAIS VU DANS TOUTE L'HISTOIRE !",
+          3.87, 10.2, 190)
+S3_START = B(10.5)
 ORBIT = random.Random(7).sample(DECK, 12)
 for k in range(6):
     SFX.append((S2 + 0.1 + k * 0.45, 'whoosh', None))
@@ -482,17 +497,15 @@ def s2(img, t):
 # 3 ─ pourquoi ? 52 x 51 x ... ------------------------------------------
 GRID_ORDER = random.Random(2024).sample(DECK, 52)
 PLACE_T = []
-tt = S3_START + 0.9
-for k in range(52):
-    PLACE_T.append(tt)
-    tt += 1.6 if k < 3 else max(0.03, 0.14 - (k - 3) * 0.004)
+PLACE_T = [V(11.7), V(14.28), V(16.12)]
+PLACE_T += [V(17.3) + 1.7 * (j / 48) ** 0.6 for j in range(49)]
 for k, pt in enumerate(PLACE_T):
     SFX.append((pt, 'place', k))
-S3_F = T("52 × 51 × 50 × ... × 1", PLACE_T[-1] + 0.4, 160, cps=24)
-S3_EQ_T = S3_F.end() + 0.35
+S3_F = VT("52 × 51 × 50 × ... × 1", 19.5, 23.0, 160)
+S3_EQ_T = V(23.75)
 impact(S3_EQ_T, 2)
-S3_N = T("(ON APPELLE ÇA *FACTORIELLE 52*)", S3_EQ_T + 1.2, 222, color=LGREY)
-S4 = after(S3_N, 0.5)
+S3_N = VT("(ON APPELLE ÇA *FACTORIELLE 52*)", 24.12, 26.1, 222, color=LGREY)
+S4 = B(26.3)
 
 
 @scene(S3_START, S4)
@@ -525,19 +538,19 @@ def s3(img, t):
 
 # 4 ─ le nombre ----------------------------------------------------------
 FACT = str(math.factorial(52))
-S4_D0 = S4 + 1.0
+S4_D0 = V(26.52)
 S4_CPS = 40
 for i in range(0, len(FACT), 2):
     SFX.append((S4_D0 + i / S4_CPS, 'blip', None))
-S4_APPROX = S4_D0 + len(FACT) / S4_CPS + 0.5
+S4_APPROX = V(29.87)
 impact(S4_APPROX, 4)
 SFX.append((S4_APPROX + 0.05, 'coin', None))
-S4_T1 = T("UN NOMBRE À *68 CHIFFRES* !", S4_APPROX + 1.4, 176)
-S4_T2 = T("BEAUCOUP TROP GRAND POUR QUE NOTRE CERVEAU PUISSE L'IMAGINER...",
-          after(S4_T1), 204, color=LGREY)
+S4_T1 = VT("UN NOMBRE À *68 CHIFFRES* !", 27.62, 29.4, 176)
+S4_T2 = VT("BEAUCOUP TROP GRAND POUR QUE NOTRE CERVEAU PUISSE L'IMAGINER...",
+           32.6, 34.8, 204, color=LGREY)
 
 
-S5 = after(S4_T2)
+S5 = B(35.1)
 
 
 @scene(S4, S5)
@@ -594,10 +607,10 @@ def earth(t):
     return Image.fromarray(out, 'RGBA')
 
 
-S5_T1 = T("C'EST PLUS QUE LE NOMBRE D'*ATOMES* QUI COMPOSENT LA TERRE ENTIÈRE ! (~10^50)",
-          S5 + 0.8, 150)
-S5_T2 = T("52 ! EST *600 MILLIONS DE MILLIARDS DE FOIS* PLUS GRAND.", after(S5_T1), 202)
-S6 = after(S5_T2)
+S5_T1 = VT("C'EST PLUS QUE LE NOMBRE D'*ATOMES* QUI COMPOSENT LA TERRE ENTIÈRE ! (~10^50)",
+           36.49, 39.56, 150)
+S5_T2 = VT("52 ! EST *600 MILLIONS DE MILLIARDS DE FOIS* PLUS GRAND.", 39.86, 42.45, 202)
+S6 = B(42.7)
 SFX.append((S5 + 0.1, 'whoosh', None))
 SFX.append((S5_T2.t0, 'coin', None))
 ATOMS = [(random.Random(i).random() * 6.28, 36 + i % 5 * 3, 0.8 + (i % 7) * 0.25) for i in range(28)]
@@ -628,13 +641,13 @@ def s5(img, t):
 
 
 # 6 ─ depuis le big bang -------------------------------------------------
-BB_T = S6 + 0.4
+BB_T = S6 + 0.3
 impact(BB_T, 3)
-S6_T1 = T("IMAGINE : *8 MILLIARDS* D'HUMAINS QUI MÉLANGENT 1 PAQUET CHAQUE SECONDE DEPUIS LE *BIG BANG*...",
-          BB_T + 1.6, 132)
-S6_T2 = T("... ILS N'AURAIENT MÊME PAS TESTÉ *1 ORDRE SUR 10^40* !", after(S6_T1), 198)
+S6_T1 = VT("IMAGINE : *8 MILLIARDS* D'HUMAINS QUI MÉLANGENT 1 PAQUET CHAQUE SECONDE DEPUIS LE *BIG BANG*...",
+           42.94, 48.98, 132)
+S6_T2 = VT("... ILS N'AURAIENT MÊME PAS TESTÉ *1 ORDRE SUR 10^40* !", 49.41, 52.6, 198)
 SFX.append((S6_T2.t0, 'whoosh', None))
-S7 = after(S6_T2, 0.5)
+S7 = B(52.95)
 _pr = random.Random(11)
 PARTS = [(_pr.random() * 6.28, 20 + _pr.random() * 40, _pr.choice([YELLOW, ORANGE, RED, WHITE, PINK]))
          for _ in range(90)]
@@ -677,18 +690,19 @@ def s6(img, t):
 
 
 # 7 ─ bonus 7 mélanges + UNIQUE ------------------------------------------
-S7_T1 = T("BONUS : IL SUFFIT DE *7 MÉLANGES À L'AMÉRICAINE* POUR BIEN MÉLANGER UN PAQUET.", S7 + 0.3, 28)
-RIFFLE0 = S7_T1.end() + 1.0
-RIFFLE_DT = 0.5
+S7_T1 = VT("BONUS : IL SUFFIT DE *7 MÉLANGES À L'AMÉRICAINE* POUR BIEN MÉLANGER UN PAQUET.",
+           53.27, 57.2, 28)
+RIFFLE0 = V(54.2)
+RIFFLE_DT = 0.42
 for k in range(7):
     SFX.append((RIFFLE0 + k * RIFFLE_DT, 'riffle', k))
-S7_T2 = T("DONC TON MÉLANGE EST SÛREMENT...", max(after(S7_T1), RIFFLE0 + 7 * RIFFLE_DT + 0.6), 186)
-UNIQUE_T = S7_T2.end() + 0.7
+S7_T2 = VT("DONC TON MÉLANGE EST SÛREMENT...", 57.7, 59.1, 186)
+UNIQUE_T = V(59.57)
 impact(UNIQUE_T, 4)
 SFX.append((UNIQUE_T + 0.05, 'sparkle', None))
 
 
-S7_END = UNIQUE_T + 3.0
+S7_END = B(60.25)
 
 
 @scene(S7, S7_END)
@@ -725,9 +739,9 @@ def s7(img, t):
 # 8 ─ appel à l'action ---------------------------------------------------
 HEART = SUIT7['H']
 S8 = S7_END
-DUR = S8 + 5.5
+DUR = V(VOICE_END) + 1.8
 SFX.append((S8 + 0.1, 'coin', None))
-S8_T = T("ABONNE-TOI POUR PLUS D'ANECDOTES DE MATHS !", S8 + 0.5, 168, cps=30)
+S8_T = VT("ABONNE-TOI POUR PLUS D'ANECDOTES DE MATHS !", 60.49, 62.2, 168)
 RAIN = [(random.Random(i).randrange(-10, W + 10), random.Random(i + 99).random() * 400,
          20 + (i % 5) * 12, DECK[(i * 17) % 52]) for i in range(14)]
 
@@ -868,7 +882,7 @@ def make_audio():
         if kind == 'blip':
             f = 900 + nr.randint(0, 5) * 80
             ln = int(0.035 * SR)
-            add(sfx, t, sq(f, 0.035) * env(ln, 60), 0.13)
+            add(sfx, t, sq(f, 0.035) * env(ln, 60), 0.035)
         elif kind == 'place':
             f = 330 * 2 ** (p / 26)
             ln = int(0.05 * SR)
@@ -902,12 +916,31 @@ def make_audio():
             for j, m in enumerate([81, 84, 88, 93, 96, 100]):
                 add(sfx, t + j * 0.05, sq(midi(m), 0.12, 0.25) * env(int(0.12 * SR), 25), 0.08)
 
+    voice = load_voice(n)
+    # ducking : la musique baisse quand la voix parle
+    k = int(0.25 * SR)
+    lvl = np.convolve(np.abs(voice), np.ones(k) / k, mode='same')
+    duck = 1 - 0.6 * np.clip(lvl / (lvl.max() * 0.15 + 1e-9), 0, 1)
+
     fade = np.ones(n)
     fl = int(1.5 * SR)
     fade[-fl:] = np.linspace(1, 0, fl)
-    mix = music * fade + sfx
+    mix = music * duck * fade * 0.55 + sfx * 0.7 + voice * 1.9
     mix /= max(1e-9, np.abs(mix).max()) / 0.89
     return (mix * 32767).astype(np.int16)
+
+
+def load_voice(n):
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', VOICE, '-f', 's16le', '-ac', '1',
+                          '-ar', str(SR), '-'], capture_output=True, check=True).stdout
+    src = np.frombuffer(raw, np.int16).astype(float) / 32768
+    src /= np.abs(src).max()
+    out = np.zeros(n)
+    cuts = [0.0] + [c for c, _ in GAPS] + [len(src) / SR]
+    for a, b in zip(cuts, cuts[1:]):
+        piece = src[int(a * SR):int(b * SR)]
+        add(out, V(a), piece, 0.5)
+    return out
 
 
 def write_wav(path, data):
@@ -927,7 +960,7 @@ def main():
     cmd = ['ffmpeg', '-y', '-loglevel', 'error',
            '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W * S}x{H * S}', '-r', str(FPS), '-i', '-',
            '-i', wav, '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-tune', 'animation',
-           '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-shortest',
+           '-pix_fmt', 'yuv420p', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-ar', '44100', '-c:a', 'aac', '-b:a', '192k', '-shortest',
            '-movflags', '+faststart', out]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     for f in range(nframes):
