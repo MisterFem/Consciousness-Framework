@@ -29,11 +29,16 @@ LINES = [
     ('fin', "Alors, utopiste ? Le mécanisme existe. Et la retraite à 60 ans ? C'est l'épisode trois. "
             "Dis-moi en commentaire ce que t'en penses."),
 ]
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/ep2.mp3
+# temps des phrases dans audio/ep2_voix.wav (généré par build_voices.py)
+MEASURED = {
+    'hook': (0.0, 2.89), 'intro': (3.24, 10.07), 'pas': (10.42, 15.72), 'buffett': (16.07, 25.62),
+    'mes': (25.97, 32.87), 'mamie': (33.22, 37.81), 'her': (38.16, 46.69), 'pas12': (47.04, 50.2),
+    'obj': (50.55, 53.02), 'univ': (53.37, 66.26), 'disc': (66.61, 71.44), 'fin': (71.79, 79.56),
+}
 EP = Episode(LINES, scene_starts={'intro': 0.2, 'pas': 0.5, 'buffett': 0.8, 'mes': 0.8, 'mamie': 0.8,
                                   'pas12': 0.4, 'obj': 0.8, 'univ': 0.4, 'disc': 0.6, 'fin': 0.8},
              inner_gaps={'her': 0.4},
-             measured=MEASURED, audio=os.path.join(HERE, 'audio', 'ep2.mp3'))
+             measured=MEASURED, audio=os.path.join(HERE, 'audio', 'ep2_voix.wav'))
 sb, at, start, stop = EP.sb, EP.at, EP.start, EP.stop
 
 # ---------------------------------------------------------------- sprites

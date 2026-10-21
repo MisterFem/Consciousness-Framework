@@ -22,11 +22,16 @@ LINES = [
     ('fin', "Alors, utopiste ? Le mécanisme existe. La vraie question, c'est : qui paie ? "
             "Réponse dans l'épisode deux."),
 ]
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/ep1.mp3
+# temps des phrases dans audio/ep1_voix.wav (généré par build_voices.py)
+MEASURED = {
+    'hook': (0.0, 3.01), 'intro': (3.36, 12.12), 'esc': (12.47, 16.22), 'panne': (16.57, 20.35),
+    'prop': (20.7, 30.61), 'obj': (30.96, 33.98), 'oui': (34.33, 38.42), 'autre': (38.77, 46.72),
+    'verre': (47.07, 54.12), 'fin': (54.47, 60.9),
+}
 EP = Episode(LINES, scene_starts={'intro': 0.2, 'esc': 0.6, 'prop': 0.8, 'obj': 0.8, 'verre': 0.6,
                                   'fin': 0.8},
              inner_gaps={'panne': 0.3, 'oui': 0.3, 'autre': 0.4},
-             measured=MEASURED, audio=os.path.join(HERE, 'audio', 'ep1.mp3'))
+             measured=MEASURED, audio=os.path.join(HERE, 'audio', 'ep1_voix.wav'))
 sb, at, start, stop = EP.sb, EP.at, EP.start, EP.stop
 
 # ---------------------------------------------------------------- sprites
@@ -150,7 +155,7 @@ def s_prop(img, t):
         p = ease_io((t - SUIT_T) / 1.6)
         for k, (lab, col) in enumerate((("PRIX", RED), ("SALAIRE", GREEN))):
             x = 46 + k * 52
-            h = int(10 + 50 * p)
+            h = int(10 + 36 * p)
             img.paste(col, (x, 224 - h, x + 24, 224))
             draw_text(img, lab, x + 12, 228, col)
             draw_text(img, "↑", x + 12, 224 - h - 14, col, scale=2)
