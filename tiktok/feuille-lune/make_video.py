@@ -1,4 +1,8 @@
-"""Vidéo TikTok pixel art : plier une feuille 42 fois pour atteindre la Lune.
+"""Vidéo TikTok pixel art : combien de plis pour atteindre la Lune ?
+
+Version courte (~40 s) tirée des statistiques des deux premières vidéos :
+question dès la première image, pari en commentaire dans les 5 premières
+secondes, réponse au sommet de la montée, fin qui boucle sur le début.
 
     python3 make_video.py                 # produit feuille_lune_tiktok.mp4
     python3 make_video.py preview 2 15    # images de contrôle
@@ -22,32 +26,24 @@ TOP = 48         # sous la barre de recherche TikTok
 
 # ---------------------------------------------------------------- narration
 LINES = [
-    ('hook', "Si tu plies une feuille de papier 42 fois… elle atteint la Lune."),
-    ('feuille', "Oui, une simple feuille. Elle fait un dixième de millimètre d'épaisseur."),
-    ('double', "Et chaque fois que tu la plies, son épaisseur double."),
-    ('p7', "7 plis : la hauteur d'un morceau de sucre."),
+    ('hook', "Combien de fois tu dois plier une feuille pour atteindre la Lune ?"),
+    ('pari', "Fais ton pari en commentaire. Mille ? Un million ?"),
+    ('regle', "À chaque pli, son épaisseur double."),
     ('p10', "10 plis : une tasse de café."),
-    ('p17', "17 plis : un immeuble de quatre étages."),
-    ('p23', "23 plis : deux fois et demie la tour Eiffel !"),
-    ('p27', "27 plis : plus haut que l'Everest."),
-    ('p30', "30 plis : tu sors de l'atmosphère. Tu es dans l'espace."),
-    ('p42', "42 plis… tu touches la Lune."),
-    ('p51', "51 plis : tu dépasses le Soleil."),
-    ('p103', "Et à 103 plis… ta feuille est plus grande que l'univers observable."),
-    ('secret', "Le secret ? Doubler, encore et encore. Rien ne grandit plus vite."),
-    ('record', "Bon, en vrai, c'est impossible : le record du monde, c'est 13 plis… "
-               "avec une bande de papier de plus d'un kilomètre !"),
-    ('cta', "Et toi, tu arrives à plier une feuille combien de fois ? Dis-le en commentaire !"),
-    ('abo', "Abonne-toi pour plus d'anecdotes qui donnent le vertige !"),
+    ('p23', "23 plis : deux fois et demie la tour Eiffel."),
+    ('p30', "30 plis : tu es dans l'espace."),
+    ('p42', "Et à 42 plis… tu touches la Lune. Seulement 42 !"),
+    ('p103', "Et à 103 plis, ta feuille dépasse l'univers observable."),
+    ('record', "En vrai, impossible : le record, c'est 13 plis."),
+    ('fin', "Alors, t'avais parié combien ?"),
 ]
-SCENE_STARTS = {'feuille': 0.8, 'p7': 0.8, 'secret': 1.0, 'record': 1.0, 'cta': 1.0}
-INNER_GAPS = {'double': 0.3, 'p10': 0.5, 'p17': 0.5, 'p23': 0.5, 'p27': 0.5, 'p30': 0.5,
-              'p42': 0.9, 'p51': 0.6, 'p103': 0.9, 'abo': 0.3}
+SCENE_STARTS = {'regle': 0.4, 'p42': 0.8, 'record': 0.6, 'fin': 0.3}
+INNER_GAPS = {'p23': 0.3, 'p30': 0.3, 'p103': 0.6}
 MEASURED = None  # {id: (début, fin)} mesurés sur audio/narration.mp3
 
 
-def estimate(rate=17.0, pause=0.4):
-    out, t = {}, 0.1
+def estimate(rate=17.0, pause=0.3):
+    out, t = {}, 0.05
     for pid, txt in LINES:
         d = len(txt) / rate
         out[pid] = (t, t + d)
@@ -63,7 +59,7 @@ for pid, g in {**SCENE_STARTS, **INNER_GAPS}.items():
     CUT[pid] = (PH[prev][1] + PH[pid][0]) / 2
     GAPS.append((CUT[pid], g))
 GAPS.sort()
-VOICE_END = PH[ids[-1]][1] + 0.2
+VOICE_END = PH[ids[-1]][1] + 0.1
 N = Narration(os.path.join(HERE, 'audio', 'narration.mp3'), PH, GAPS, VOICE_END)
 
 
@@ -72,8 +68,7 @@ def sb(pid):
     return N.B(CUT[pid])
 
 
-DUR = N.V(VOICE_END) + 2.0
-
+DUR = N.V(VOICE_END) + 1.2
 
 # ---------------------------------------------------------------- outils
 def fmt(m):
@@ -171,7 +166,7 @@ BALL = art(["....wwwww....", "..wwlwwwlww..", ".wlwwwlwwwlw.", ".wwwlwwwlwww.",
 # objets de comparaison : (hauteur réelle en m, sprite, nom)
 OBJECTS = [(0.0125, SUGAR, "SUCRE"), (0.095, MUG, "TASSE"), (13, BUILDING, "IMMEUBLE"),
            (330, EIFFEL, "TOUR EIFFEL"), (8849, MOUNTAIN, "EVEREST")]
-LABEL_AT = {7: 0, 10: 1, 17: 2, 23: 3, 27: 4}
+LABEL_AT = {10: 1, 23: 3}
 
 # ---------------------------------------------------------------- la montée
 GROUND, COLTOP, COLX = 200, 95, 52
@@ -187,10 +182,10 @@ def scaled(spr, hpx):
     return spr.resize((max(1, int(round(spr.width * sc))), max(1, int(round(hpx)))), Image.NEAREST)
 
 
-def draw_climb(img, n, t, label=None, warp=0.0):
+def draw_climb(img, n, t, label=None, warp=0.0, coltop=COLTOP):
     """Colonne de papier de n plis, à côté d'objets à la même échelle."""
     h = thick(n)
-    k = COLH / h  # pixels par mètre
+    k = (GROUND - coltop) / h  # pixels par mètre
     d = ImageDraw.Draw(img)
     # étoiles en mode « hyperespace »
     if warp > 0:
@@ -251,12 +246,12 @@ def draw_climb(img, n, t, label=None, warp=0.0):
                 px[int(x) + 1, int(y)] = col
         draw_text(img, "UNIVERS", int(COLX + 4 + ru * 0.6) + 20, int(GROUND - ru * 0.75) - 8, LAVENDER)
     # la colonne de papier
-    img.paste(SHADOW, (COLX + 2, COLTOP + 2, COLX + 10, GROUND))
-    img.paste(WHITE, (COLX, COLTOP, COLX + 8, GROUND))
+    img.paste(SHADOW, (COLX + 2, coltop + 2, COLX + 10, GROUND))
+    img.paste(WHITE, (COLX, coltop, COLX + 8, GROUND))
     off = int(t * 20) % 3
-    for y in range(COLTOP + off, GROUND, 3):
+    for y in range(coltop + off, GROUND, 3):
         img.paste(LGREY, (COLX, y, COLX + 8, y + 1))
-    img.paste(LGREY, (COLX + 7, COLTOP, COLX + 8, GROUND))
+    img.paste(LGREY, (COLX + 7, coltop, COLX + 8, GROUND))
 
 
 def counter(img, n):
@@ -268,71 +263,74 @@ def counter(img, n):
         draw_text(img, v, CX, TOP + 24, WHITE, maxw=150)
 
 
+
+
 # ================================================================ SCÈNES
-# 1 ─ accroche : lisible dès la première image ---------------------------
+def arrow(img, x, y, col=YELLOW):
+    rows = ["......#...", "......##..", "#########.", "##########", "#########.",
+            "......##..", "......#..."]
+    m = mask_img(rows_to_mask(rows), 2)
+    img.paste(SHADOW, (int(x) + 2, int(y) + 2), m)
+    img.paste(col, (int(x), int(y)), m)
+
+
+def question(img, t):
+    """Écran de la question : aussi l'image de fin, pour que la vidéo boucle."""
+    draw_climb(img, 42, t, coltop=118)
+    # le compteur tourne : on ne donne pas la réponse
+    fake = random.Random(int(t * 12)).randint(10, 99999)
+    draw_text(img, str(fake), 112, 150, WHITE, scale=2, maxw=100)
+    draw_text(img, "PLIS ?", 112, 172, LGREY, maxw=100)
+    draw_text(img, "COMBIEN", CX, TOP - 8, WHITE, scale=2, shadow=PURPLE, maxw=150)
+    draw_text(img, "DE PLIS POUR", CX, TOP + 12, WHITE, scale=2, shadow=PURPLE, maxw=150)
+    draw_text(img, "LA LUNE ?", CX, TOP + 34, YELLOW, scale=3, shadow=PURPLE, maxw=150)
+
+
+# 1 ─ la question + le pari ----------------------------------------------
 SFX.append((0.0, 'crash', None))
+PARI_T = N.start('pari')
+SFX.append((PARI_T, 'coin', None))
+for i in range(int(sb('regle') * 8)):
+    SFX.append((i / 8, 'blip', None))
 
 
-@scene(0.0, sb('feuille'))
+@scene(0.0, sb('regle'))
 def s1(img, t):
-    draw_climb(img, 42, t)
-    draw_text(img, "42 PLIS", CX, TOP - 2, YELLOW, scale=3, shadow=PURPLE, maxw=170)
-    draw_text(img, "UNE FEUILLE PLIÉE 42 FOIS ATTEINDRAIT LA *LUNE* !", CX, 210, maxw=140)
+    question(img, t)
+    if t >= PARI_T:
+        p = ease_out_back((t - PARI_T) / 0.35)
+        img.paste(SHADOW, (14, 206, 156, 242))
+        draw_text(img, "TON PARI EN", CX, int(208 + (1 - p) * 8), WHITE, scale=2, maxw=150)
+        draw_text(img, "COMMENTAIRE", CX, 226, YELLOW, scale=2, shadow=PURPLE, maxw=150)
+        arrow(img, 138 + abs(math.sin(t * 5)) * 5, 186)
+    else:
+        draw_text(img, "UNE SIMPLE FEUILLE DE PAPIER...", CX, 214, maxw=150)
 
 
-# 2 ─ la feuille et le pli ----------------------------------------------
-S2_T1 = N.text("UNE SIMPLE FEUILLE : *0,1 MM* D'ÉPAISSEUR", 'feuille', 200)
-S2_T2 = N.text("CHAQUE PLI : ÉPAISSEUR *× 2*", 'double', 200)
-FOLD0 = N.start('double') + 0.6
-FOLD_DT = 0.7
-for k in range(4):
-    SFX.append((FOLD0 + k * FOLD_DT, 'place', k * 6))
-
-
-@scene(sb('feuille'), sb('p7'))
-def s2(img, t):
-    k = int(clamp((t - FOLD0) / FOLD_DT + 1, 0, 4)) if t >= FOLD0 else 0
-    p = clamp((t - FOLD0 - (k - 1) * FOLD_DT) / 0.25) if k else 1
-    # vue de dessus : la feuille rétrécit
-    wv = 70 / (2 ** max(0, k - 1)) * (1 - 0.5 * ease_io(p)) if k else 70
-    x0 = CX - 35
-    img.paste(SHADOW, (x0 + 3, 63, int(x0 + wv) + 3, 123))
-    img.paste(WHITE, (x0, 60, int(x0 + wv), 120))
-    for y in range(66, 116, 6):
-        img.paste((150, 190, 230), (x0 + 3, y, int(x0 + wv) - 3, y + 1))
-    # vue de côté : les couches s'empilent
-    layers = 2 ** k
-    for i in range(layers):
-        img.paste(WHITE if i % 2 == 0 else LGREY, (CX - 30, 160 - i * 2, CX + 30, 161 - i * 2))
-    draw_text(img, f"{layers} COUCHE" + ("S" if layers > 1 else ""), CX, 166, LGREY)
-    if k:
-        draw_text(img, "× 2", CX + 46, 140, YELLOW, scale=2, shadow=PURPLE)
-    (S2_T1 if t < S2_T2.t0 else S2_T2).draw(img, t, CX)
-
-
-# 3 ─ la grande montée --------------------------------------------------
-MILES = [('p7', 7), ('p10', 10), ('p17', 17), ('p23', 23), ('p27', 27), ('p30', 30),
-         ('p42', 42), ('p51', 51), ('p103', 103)]
-NKEYS = [(sb('p7'), 0.0)]
+# 2 ─ la règle + la montée ---------------------------------------------
+FOLD0 = N.start('regle') + 0.2
+FOLD_DT = 0.45
+for k in range(3):
+    SFX.append((FOLD0 + k * FOLD_DT, 'place', k * 8))
+MILES = [('p10', 10), ('p23', 23), ('p30', 30), ('p42', 42), ('p103', 103)]
+CLIMB0 = N.start('p10') - 0.4
+NKEYS = [(CLIMB0, 3.0)]
 for pid, n in MILES:
     t0 = N.start(pid)
-    dur = 3.0 if n == 103 else (1.6 if n in (42, 51) else 0.9)
-    NKEYS += [(t0 - 0.2, NKEYS[-1][1]), (t0 - 0.2 + dur, float(n))]
-    SFX.append((t0 - 0.2 + dur, 'impact' if n in (42, 103) else 'coin', None))
+    dur = 3.0 if n == 103 else (2.0 if n == 42 else 1.0)
+    NKEYS += [(t0 - 0.3, NKEYS[-1][1]), (t0 - 0.3 + dur, float(n))]
     if n in (42, 103):
-        SHAKES.append((t0 - 0.2 + dur, 3))
+        impact(t0 - 0.3 + dur, 4)
+        SFX.append((t0 - 0.2 + dur, 'sparkle', None))
+    else:
+        SFX.append((t0 - 0.3 + dur, 'coin', None))
+REVEAL42 = N.start('p42') - 0.3 + 2.0
 CAPS = {
-    'p7': "7 PLIS : UN *MORCEAU DE SUCRE*",
-    'p10': "10 PLIS : UNE *TASSE DE CAFÉ*",
-    'p17': "17 PLIS : UN *IMMEUBLE* DE 4 ÉTAGES",
-    'p23': "23 PLIS : *2,5 × LA TOUR EIFFEL* !",
-    'p27': "27 PLIS : PLUS HAUT QUE *L'EVEREST*",
-    'p30': "30 PLIS : TU ES DANS *L'ESPACE*",
-    'p42': "42 PLIS : TU TOUCHES *LA LUNE* !",
-    'p51': "51 PLIS : TU DÉPASSES *LE SOLEIL*",
-    'p103': "103 PLIS : PLUS GRANDE QUE *L'UNIVERS OBSERVABLE* !",
+    'p10': "UNE TASSE", 'p23': "2,5 TOURS EIFFEL", 'p30': "L'ESPACE !",
+    'p42': "LA LUNE !", 'p103': "L'UNIVERS !",
 }
-CAP_T = [(N.start(pid), N.text(txt, pid, 212)) for pid, txt in CAPS.items()]
+CAP_T = [(N.start(pid), T(txt, N.start(pid) + 0.4, 214, cps=18, scale=2, color=YELLOW, shadow=PURPLE))
+         for pid, txt in CAPS.items()]
 
 
 def n_at(t):
@@ -345,10 +343,23 @@ def n_at(t):
     return NKEYS[-1][1]
 
 
-@scene(sb('p7'), sb('secret'))
-def s3(img, t):
+@scene(sb('regle'), sb('record'))
+def s2(img, t):
+    if t < CLIMB0:
+        # deux plis rapides : 1 -> 2 -> 4 -> 8 couches
+        k = int(clamp((t - FOLD0) / FOLD_DT + 1, 0, 3)) if t >= FOLD0 else 0
+        layers = 2 ** k
+        w = int(70 / 2 ** k)
+        img.paste(SHADOW, (CX - 35 + 3, 113, CX - 35 + w + 3, 163))
+        img.paste(WHITE, (CX - 35, 110, CX - 35 + w, 160))
+        for i in range(layers):
+            img.paste(WHITE if i % 2 == 0 else LGREY, (CX - 30, 190 - i * 3, CX + 30, 192 - i * 3))
+        draw_text(img, "ÉPAISSEUR", CX, TOP, WHITE, scale=2, maxw=170)
+        draw_text(img, "× 2", CX, TOP + 20, YELLOW, scale=3, shadow=PURPLE)
+        draw_text(img, f"{layers} COUCHE" + ("S" if layers > 1 else ""), CX, 198, LGREY)
+        return
     n = n_at(t)
-    warp = clamp((n - 51) / 10) * clamp((103 - n) / 6 + 0.2)
+    warp = clamp((n - 45) / 10) * clamp((103 - n) / 6 + 0.2)
     lab = None
     for m, i in LABEL_AT.items():
         if abs(n - m) < 0.6:
@@ -360,96 +371,42 @@ def s3(img, t):
         if t >= t0:
             cur = tx
     if cur:
-        img.paste(SHADOW, (6, 207, 162, 240))
+        img.paste(SHADOW, (14, 208, 156, 240))
         cur.draw(img, t, CX)
+    if REVEAL42 <= t < N.start('p103'):
+        p = ease_out_back((t - REVEAL42) / 0.4)
+        draw_text(img, "SEULEMENT 42 !", 118, int(150 + (1 - p) * 10), WHITE, maxw=100)
 
 
-# 4 ─ le secret : doubler -----------------------------------------------
-POW0 = N.start('secret') + 0.3
-POW_DT = 0.16
-for i in range(16):
-    SFX.append((POW0 + i * POW_DT, 'place', i * 2))
-BIGPOW = N.stop('secret') - 0.6
-impact(BIGPOW, 3)
-S4_T = N.text("LE SECRET ? *DOUBLER*, ENCORE ET ENCORE.", 'secret', 205)
+# 3 ─ la réalité, puis retour à la question ------------------------------
+REC_T = N.start('record') + 0.3
+impact(REC_T + 0.6, 2)
+S3_T = N.text("EN VRAI : IMPOSSIBLE", 'record', 200)
 
 
-@scene(sb('secret'), sb('record'))
-def s4(img, t):
-    shown = int(clamp((t - POW0) / POW_DT + 1, 0, 16)) if t >= POW0 else 0
-    for i in range(shown):
-        x = CX - 60 + (i % 4) * 40
-        y = TOP + (i // 4) * 16
-        draw_text(img, str(2 ** i), x, y, WHITE if i < 15 else YELLOW, maxw=60)
-    if shown >= 16:
-        draw_text(img, "...", CX, TOP + 64, LGREY)
-    if t >= BIGPOW:
-        p = ease_out_back((t - BIGPOW) / 0.4)
-        draw_text(img, "À 42 PLIS :", CX, int(140 + (1 - p) * 10), WHITE)
-        draw_text(img, "4 398 MILLIARDS", CX, 154, YELLOW, scale=2, shadow=PURPLE, maxw=170)
-        draw_text(img, "DE COUCHES DE PAPIER", CX, 178, WHITE)
-    S4_T.draw(img, t, CX)
-
-
-# 5 ─ la réalité --------------------------------------------------------
-REC_T = N.start('record') + 1.5
-impact(REC_T, 2)
-S5_T = N.text("EN VRAI : IMPOSSIBLE. LE RECORD, C'EST *13 PLIS*... AVEC UNE BANDE DE PAPIER DE "
-              "*PLUS D'1 KM* !", 'record', 196)
-
-
-@scene(sb('record'), sb('cta'))
-def s5(img, t):
+@scene(sb('record'), sb('fin'))
+def s3(img, t):
     lt = t - sb('record')
     b = scaled(BALL, 48)
-    img.paste(b, (CX - b.width // 2, 92 + int(math.sin(lt * 3) * 3)), b)
-    if t >= REC_T:
-        p = ease_out_back((t - REC_T) / 0.4)
-        draw_text(img, "RECORD DU MONDE", CX, TOP, WHITE)
-        draw_text(img, "13 PLIS", CX, int(TOP + 14 + (1 - p) * 10), YELLOW, scale=2, shadow=PURPLE)
-    S5_T.draw(img, t, CX)
+    img.paste(b, (CX - b.width // 2, 110 + int(math.sin(lt * 3) * 3)), b)
+    if t >= REC_T + 0.6:
+        p = ease_out_back((t - REC_T - 0.6) / 0.4)
+        draw_text(img, "RECORD", CX, TOP, WHITE, scale=2)
+        draw_text(img, "13 PLIS", CX, int(TOP + 22 + (1 - p) * 10), YELLOW, scale=3, shadow=PURPLE)
+    S3_T.draw(img, t, CX)
 
 
-# 6 ─ à toi ! -----------------------------------------------------------
-_C0, _C1 = N.start('cta'), N.stop('cta')
-_CM = _C0 + (_C1 - _C0) * 0.68  # « Dis-le en commentaire » ~ dernier tiers
-S6_T1 = T("ET TOI, TU ARRIVES À LA PLIER *COMBIEN DE FOIS* ?", _C0, 140, cps=48 / (_CM - _C0))
-S6_T2 = T("DIS-LE EN COMMENTAIRE !", _CM, 204, cps=23 / (_C1 - _CM))
-ABO_T = N.start('abo')
-SFX.append((ABO_T, 'coin', None))
-
-
-def arrow(img, x, y, col=YELLOW):
-    rows = ["......#...", "......##..", "#########.", "##########", "#########.",
-            "......##..", "......#..."]
-    m = mask_img(rows_to_mask(rows), 2)
-    img.paste(SHADOW, (int(x) + 2, int(y) + 2), m)
-    img.paste(col, (int(x), int(y)), m)
-
-
-@scene(sb('cta'), DUR)
-def s6(img, t):
-    lt = t - sb('cta')
-    k = int(lt / 0.6) % 4
-    w = int(60 / (2 ** k))
-    img.paste(SHADOW, (CX - 30 + 3, 73, CX - 30 + w + 3, 123))
-    img.paste(WHITE, (CX - 30, 70, CX - 30 + w, 120))
-    for y in range(76, 116, 6):
-        img.paste((150, 190, 230), (CX - 27, y, CX - 30 + w - 3, y + 1))
-    S6_T1.draw(img, t, CX)
-    if t >= S6_T2.t0:
-        S6_T2.draw(img, t, CX)
-        arrow(img, 128 + abs(math.sin(lt * 5)) * 6, 179)
-    if t >= ABO_T:
-        p = ease_out_back((t - ABO_T) / 0.4)
-        y = int(TOP - 6 - (1 - p) * 20)
-        img.paste(RED, (CX - 40, y, CX + 40, y + 16))
-        img.paste(PINK, (CX - 40, y, CX + 40, y + 2))
-        draw_text(img, "+ ABONNE-TOI", CX, y + 1, WHITE, shadow=PURPLE)
+@scene(sb('fin'), DUR)
+def s4(img, t):
+    question(img, t)
+    img.paste(SHADOW, (14, 206, 156, 242))
+    draw_text(img, "T'AVAIS PARIÉ", CX, 208, WHITE, scale=2, maxw=170)
+    draw_text(img, "COMBIEN ?", CX, 226, YELLOW, scale=2, shadow=PURPLE, maxw=170)
+    arrow(img, 138 + abs(math.sin(t * 5)) * 5, 186)
 
 
 if __name__ == '__main__':
-    render_video(os.path.join(HERE, 'feuille_lune_tiktok.mp4'), DUR, N,
+    render_video(os.path.join(HERE, 'feuille_lune_tiktok.mp4'), DUR, N, loop=True,
                  music=dict(bpm=118,
                             chords=[[64, 67, 71, 76], [60, 64, 67, 72], [67, 71, 74, 79], [62, 66, 69, 74]],
                             roots=[40, 36, 43, 38], climax=N.start('p42')))

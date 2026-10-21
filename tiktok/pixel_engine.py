@@ -442,7 +442,7 @@ def shake_offset(t, f):
     return r.randint(-a, a), r.randint(-a, a)
 
 
-def render_frame(f, dur):
+def render_frame(f, dur, loop=False):
     t = f / FPS
     img = BG.copy()
     draw_stars(img, t)
@@ -455,8 +455,8 @@ def render_frame(f, dur):
         moved = BG.copy()
         moved.paste(img, (dx, dy))
         img = moved
-    wipe(img, t, [s[0] for s in SCENES[1:]] + [dur + 0.15])
-    if t > dur - 0.6:
+    wipe(img, t, [s[0] for s in SCENES[1:]] + ([] if loop else [dur + 0.15]))
+    if t > dur - 0.6 and not loop:
         k = clamp((dur - t) / 0.6)
         img = Image.eval(img, lambda v: int(v * k))
     return img
@@ -575,7 +575,7 @@ def make_sfx(n, nr):
     return sfx
 
 
-def make_audio(dur, narration=None, music=None):
+def make_audio(dur, narration=None, music=None, loop=False):
     n = int(dur * SR)
     nr = np.random.RandomState(1)
     mus = make_music(n, dur, nr, **{**MUSIC, **(music or {})})
@@ -590,7 +590,7 @@ def make_audio(dur, narration=None, music=None):
     else:
         duck, gain = 1.0, 1.0
     fade = np.ones(n)
-    fl = int(1.5 * SR)
+    fl = int((0.25 if loop else 1.5) * SR)
     fade[-fl:] = np.linspace(1, 0, fl)
     mix = mus * duck * fade * gain + sfx * 0.7 + voice * 1.9
     mix /= max(1e-9, np.abs(mix).max()) / 0.89
@@ -606,18 +606,21 @@ def write_wav(path, data):
 
 
 # ================================================================ MAIN
-def render_video(out, dur, narration=None, music=None):
-    """`python3 script.py` -> mp4 ; `python3 script.py preview 3 12.5` -> PNG."""
+def render_video(out, dur, narration=None, music=None, loop=False):
+    """`python3 script.py` -> mp4 ; `python3 script.py preview 3 12.5` -> PNG.
+
+    loop=True : pas de fondu final, pour que la vidéo s'enchaîne sur son début.
+    """
     here = os.path.dirname(os.path.abspath(out))
     if len(sys.argv) > 1 and sys.argv[1] == 'preview':
         for ts in sys.argv[2:]:
-            render_frame(int(float(ts) * FPS), dur).resize((W * 3, H * 3), Image.NEAREST).save(
+            render_frame(int(float(ts) * FPS), dur, loop).resize((W * 3, H * 3), Image.NEAREST).save(
                 os.path.join(here, f'_preview_{ts}.png'))
         return
     for t0, _, _ in SCENES[1:]:
         SFX.append((t0 - 0.15, 'whoosh', None))
     wav = os.path.join(here, '_audio.wav')
-    write_wav(wav, make_audio(dur, narration, music))
+    write_wav(wav, make_audio(dur, narration, music, loop))
     nframes = int(dur * FPS)
     cmd = ['ffmpeg', '-y', '-loglevel', 'error',
            '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W * S}x{H * S}', '-r', str(FPS), '-i', '-',
@@ -626,7 +629,7 @@ def render_video(out, dur, narration=None, music=None):
            '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', out]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     for f in range(nframes):
-        img = render_frame(f, dur).resize((W * S, H * S), Image.NEAREST)
+        img = render_frame(f, dur, loop).resize((W * S, H * S), Image.NEAREST)
         proc.stdin.write(img.tobytes())
         if f % 300 == 0:
             print(f'frame {f}/{nframes}', flush=True)
