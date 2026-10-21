@@ -1,0 +1,7 @@
+SCEPTIQUE — un fichier mp3 par réplique, nommé comme indiqué :
+
+ep1_hook.mp3 : C'est bien beau… mais c'est utopiste.
+ep1_obj.mp3 : Oui, mais ça coûtera plus cher aux entreprises !
+ep2_hook.mp3 : C'est bien beau… mais qui va payer ?
+ep2_obj.mp3 : Oui mais les riches vont partir !
+ep3_hook.mp3 : C'est bien beau… mais la retraite à 60 ans, c'est impossible.
