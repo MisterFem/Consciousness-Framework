@@ -22,9 +22,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CX = 90
 TOP = 48
 
-INTRO = 5.0          # inspiration + 3, 2, 1
+# voix d'Hugo (audio/intro.mp3) : « Grande inspiration… » puis « trois, deux, un ! »
+COUNT = [4.91, 5.68, 6.57]   # moments où il dit trois, deux, un
+INTRO = 7.2          # inspiration + 3, 2, 1
 HOLD = 45.0          # durée de l'apnée
-OUTRO = 7.0
+OUTRO = 7.5
 DUR = INTRO + HOLD + OUTRO
 
 
@@ -180,14 +182,13 @@ def lungs(img, cx, cy, fill):
 
 # ================================================================ SCÈNES
 SFX.append((0.0, 'crash', None))
-for k in range(3):
-    SFX.append((2.0 + k, 'place', 20 - k * 4))
+for k, tc in enumerate(COUNT):
+    SFX.append((tc, 'place', 20 - k * 4))
 SFX.append((INTRO, 'impact', None))
 SHAKES.append((INTRO, 2))
 for s, _, _, _ in LEVELS[:-1]:
     SFX.append((INTRO + s, 'coin', None))
 SFX.append((INTRO + HOLD, 'sparkle', None))
-SFX.append((INTRO + HOLD + 0.3, 'impact', None))
 
 
 @scene(0.0, INTRO)
@@ -196,14 +197,14 @@ def s_intro(img, t):
     draw_text(img, "RESPIRATION", CX, TOP + 20, YELLOW, scale=2, shadow=PURPLE)
     draw_text(img, "JUSQU'AU DAUPHIN", CX, TOP + 44, WHITE)
     put(img, DOLPHIN, CX, TOP + 62 + math.sin(t * 3) * 2, 2)
-    if t < 2.0:
-        lungs(img, CX, 152, clamp(t / 2.0))
-        draw_text(img, "INSPIRE À FOND...", CX, 184, WHITE, scale=1)
+    if t < COUNT[0]:
+        lungs(img, CX, 152, clamp(t / 4.4))
+        draw_text(img, "INSPIRE À FOND..." if t < 2.17 else "ET BLOQUE !", CX, 184, WHITE, scale=1)
     else:
         lungs(img, CX, 152, 1)
-        n = 3 - int(t - 2.0)
-        p = ease_out_back(((t - 2.0) % 1) / 0.3)
-        draw_text(img, str(max(1, n)), CX, int(176 + (1 - p) * 6), YELLOW, scale=3, shadow=PURPLE)
+        k = sum(1 for tc in COUNT if t >= tc)
+        p = ease_out_back((t - COUNT[k - 1]) / 0.3)
+        draw_text(img, str(4 - k), CX, int(176 + (1 - p) * 6), YELLOW, scale=3, shadow=PURPLE)
     safety(img)
 
 
@@ -260,13 +261,38 @@ def s_win(img, t):
             x, y = CX + math.cos(a) * dd, 130 + math.sin(a) * dd * 0.7
             if 0 <= x < W and 0 <= y < H and (int(lt * 10) + i) % 3:
                 px[int(x), int(y)] = RAINBOW[i % 6]
-    if lt > 2.0:
+    if lt > FIN_START + 4.2:
         img.paste(SHADOW, (14, 182, 156, 216))
         draw_text(img, "T'AS TENU JUSQU'OÙ ?", CX, 186, WHITE, maxw=150)
         draw_text(img, "DIS-LE EN COMMENTAIRE", CX, 200, YELLOW, maxw=150)
     safety(img)
 
 
+FIN_START = 0.1    # la fin d'Hugo démarre 0,1 s après la fin de l'apnée
+
+
+def voice():
+    """Assemble intro + fin dans une seule piste, à leur place dans la vidéo."""
+    import subprocess
+    import wave
+
+    def load(name):
+        raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', os.path.join(HERE, 'audio', name), '-f', 's16le',
+                              '-ac', '1', '-ar', str(SR), '-'], capture_output=True, check=True).stdout
+        return np.frombuffer(raw, np.int16).astype(float) / 32768
+
+    out = np.zeros(int(DUR * SR))
+    add(out, 0.0, load('intro.mp3'), 1.0)
+    add(out, INTRO + HOLD + FIN_START, load('fin.mp3'), 1.0)
+    path = os.path.join(HERE, 'audio', 'voix.wav')
+    with wave.open(path, 'wb') as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes((np.clip(out, -1, 1) * 32767).astype(np.int16).tobytes())
+    return Narration(path, {}, [], DUR)
+
+
 if __name__ == '__main__':
-    render_video(os.path.join(HERE, 'apnee_tiktok.mp4'), DUR, None, loop=False,
+    render_video(os.path.join(HERE, 'apnee_tiktok.mp4'), DUR, voice(), loop=False,
                  music=lambda n, dur: np.zeros(n))
