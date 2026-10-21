@@ -109,11 +109,6 @@ def art(rows, cmap):
     return Image.fromarray(a, 'RGBA')
 
 
-def ease_io(p):
-    p = clamp(p)
-    return p * p * (3 - 2 * p)
-
-
 # ---------------------------------------------------------------- sprites
 SUGAR = art(["wwwwww", "wwwwwl", "wwwwwl", "wwwwwl", "wwwwwl", "llllll"],
             {'w': WHITE, 'l': LGREY})
