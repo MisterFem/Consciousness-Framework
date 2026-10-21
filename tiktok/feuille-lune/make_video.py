@@ -39,7 +39,12 @@ LINES = [
 ]
 SCENE_STARTS = {'regle': 0.4, 'p42': 0.8, 'record': 0.6, 'fin': 0.3}
 INNER_GAPS = {'p23': 0.3, 'p30': 0.3, 'p103': 0.6}
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/narration.mp3
+# {id: (début, fin)} mesurés sur audio/narration.mp3 (silences > 0,12 s)
+MEASURED = {
+    'hook': (0.0, 2.88), 'pari': (3.30, 5.86), 'regle': (6.28, 8.28), 'p10': (8.67, 10.39),
+    'p23': (10.72, 13.27), 'p30': (13.61, 15.46), 'p42': (15.80, 19.89), 'p103': (20.22, 23.33),
+    'record': (23.81, 26.71), 'fin': (27.07, 28.6),
+}
 
 
 def estimate(rate=17.0, pause=0.3):
@@ -379,7 +384,7 @@ def s2(img, t):
 
 
 # 3 ─ la réalité, puis retour à la question ------------------------------
-REC_T = N.start('record') + 0.3
+REC_T = N.V(25.1)  # « ...c'est 13 plis » vers 25,7 s
 impact(REC_T + 0.6, 2)
 S3_T = N.text("EN VRAI : IMPOSSIBLE", 'record', 200)
 
