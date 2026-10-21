@@ -95,6 +95,14 @@ FONT = {
     '°': [".#.", "#.#", ".#.", "...", "...", "...", "..."],
     '€': [".####", "#....", "####.", "#....", "####.", "#....", ".####"],
     '✓': [".....", "....#", "...#.", "#.#..", ".#...", ".....", "....."],
+    '«': [".....", "..#.#", ".#.#.", "#.#..", ".#.#.", "..#.#", "....."],
+    '»': [".....", "#.#..", ".#.#.", "..#.#", ".#.#.", "#.#..", "....."],
+    '—': [".....", ".....", ".....", "#####", ".....", ".....", "....."],
+    '…': [".....", ".....", ".....", ".....", ".....", ".....", "#.#.#"],
+    '≠': [".....", "...#.", "#####", "..#..", "#####", ".#...", "....."],
+    '·': [".", ".", ".", "#", ".", ".", "."],
+    '→': [".......", "....#..", ".....#.", "#######", ".....#.", "....#..", "......."],
+    '↑': ["..#..", ".###.", "#.#.#", "..#..", "..#..", "..#..", "..#.."],
 }
 ACC = {
     'acute': ["...#.", "..#.."], 'grave': [".#...", "..#.."],
@@ -225,6 +233,7 @@ _layout_cache = {}
 
 def draw_text(img, text, cx, y, color=WHITE, scale=1, maxw=150, reveal=10 ** 9,
               hl_color=YELLOW, shadow=SHADOW, wave_t=None, rainbow=False, lh=12):
+    cx, y = int(round(cx)), int(round(y))
     key = (text, maxw // scale)
     if key not in _layout_cache:
         _layout_cache[key] = layout(text, maxw // scale)
@@ -449,17 +458,25 @@ def shake_offset(t, f):
     return r.randint(-a, a), r.randint(-a, a)
 
 
+BACKDROP = {'image': BG, 'anim': draw_stars}
+
+
+def set_backdrop(image, anim):
+    """Remplace le fond étoilé par défaut (image fixe + animation par image)."""
+    BACKDROP['image'], BACKDROP['anim'] = image, anim
+
+
 def render_frame(f, dur, loop=False):
     t = f / FPS
-    img = BG.copy()
-    draw_stars(img, t)
+    img = BACKDROP['image'].copy()
+    BACKDROP['anim'](img, t)
     for t0, t1, fn in SCENES:
         if t0 <= t < t1:
             fn(img, t)
             break
     dx, dy = shake_offset(t, f)
     if dx or dy:
-        moved = BG.copy()
+        moved = BACKDROP['image'].copy()
         moved.paste(img, (dx, dy))
         img = moved
     wipe(img, t, [s[0] for s in SCENES[1:]] + ([] if loop else [dur + 0.15]))
