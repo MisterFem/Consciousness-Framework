@@ -45,7 +45,12 @@ LINES = [
 # du temps sans voix pour écouter le son
 SCENE_STARTS = {'piege': 1.0, 'notes': 0.8, 'escalier': 0.6, 'cinema': 0.6, 'fin': 0.8}
 INNER_GAPS = {'encore': 2.5, 'fondu': 0.5, 'cerveau': 0.4}
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/narration.mp3
+# {id: (début, fin)} mesurés sur audio/narration.mp3 (silences > 0,12 s)
+MEASURED = {
+    'hook': (0.0, 2.55), 'com': (2.99, 5.65), 'encore': (6.18, 10.26), 'piege': (10.73, 16.38),
+    'notes': (16.88, 22.81), 'fondu': (23.25, 28.63), 'cerveau': (29.07, 33.78),
+    'escalier': (34.14, 36.58), 'cinema': (36.97, 42.40), 'fin': (42.84, 46.4),
+}
 
 
 def estimate(rate=17.0, pause=0.3):
