@@ -257,13 +257,13 @@ def s_notes(img, t):
 
 
 # l'escalier impossible ---------------------------------------------------------
-RING = 16
+RING = 24
 
 
-def ring_pos(i, cx=CX, cy=132, half=44):
+def ring_pos(i, cx=CX, cy=150, half=40):
     """Position de la marche i sur un carré (vue de dessus)."""
-    side, u = divmod(i % RING, RING // 4)
-    u = u / (RING // 4)
+    f = (i % RING) / (RING / 4)
+    side, u = int(f), f - int(f)
     pts = [(-1, -1), (1, -1), (1, 1), (-1, 1), (-1, -1)]
     (x0, y0), (x1, y1) = pts[side], pts[side + 1]
     return cx + half * (x0 + (x1 - x0) * u), cy + half * (y0 + (y1 - y0) * u)
@@ -275,15 +275,15 @@ def s_escalier(img, t):
     draw_text(img, "IMPOSSIBLE", CX, TOP + 20, YELLOW, scale=2, shadow=PURPLE)
     for i in range(RING):
         x, y = ring_pos(i)
-        c = 60 + i * 11
+        c = 70 + i * 7
         img.paste((c // 2, c // 2, c), (int(x) - 6, int(y) - 6, int(x) + 6, int(y) + 6))
         draw_text(img, "↑", int(x), int(y) - 6, (200, 205, 255), shadow=None)
     lt = t - sb('escalier')
-    x, y = ring_pos(lt * 3)
+    x, y = ring_pos(lt * 4)
     frame = int(t * 6) % 2
     sprite(img, CLIMBER[frame], CL_COL, x - 6, y - 16, 2)
-    draw_text(img, "TOUJOURS PLUS HAUT...", CX, 196, WHITE, maxw=MAXW)
-    draw_text(img, "ET TOUJOURS AU MÊME ENDROIT", CX, 210, LGREY, maxw=MAXW)
+    draw_text(img, "TOUJOURS PLUS HAUT...", CX, 202, WHITE, maxw=MAXW)
+    draw_text(img, "ET TOUJOURS AU MÊME ENDROIT", CX, 216, LGREY, maxw=MAXW)
 
 
 # le cinéma ---------------------------------------------------------------------
