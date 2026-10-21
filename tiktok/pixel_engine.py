@@ -103,6 +103,7 @@ FONT = {
     '·': [".", ".", ".", "#", ".", ".", "."],
     '→': [".......", "....#..", ".....#.", "#######", ".....#.", "....#..", "......."],
     'Œ': [".####", "#.#..", "#.#..", "#.###", "#.#..", "#.#..", ".####"],
+    '∞': [".......", ".......", ".##.##.", "#..#..#", ".##.##.", ".......", "......."],
     '↑': ["..#..", ".###.", "#.#.#", "..#..", "..#..", "..#..", "..#.."],
 }
 ACC = {
@@ -603,7 +604,10 @@ def make_sfx(n, nr):
 def make_audio(dur, narration=None, music=None, loop=False):
     n = int(dur * SR)
     nr = np.random.RandomState(1)
-    mus = make_music(n, dur, nr, **{**MUSIC, **(music or {})})
+    if callable(music):  # bande son sur mesure à la place de la chiptune
+        mus = music(n, dur)
+    else:
+        mus = make_music(n, dur, nr, **{**MUSIC, **(music or {})})
     sfx = make_sfx(n, nr)
     voice = narration.load(n) if narration else np.zeros(n)
     if np.abs(voice).max() > 0:
