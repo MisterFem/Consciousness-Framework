@@ -37,7 +37,11 @@ LINES = [
 ]
 SCENE_STARTS = {'nozick': 0.6, 'twist': 0.8, 'debr': 0.4, 'res': 0.8, 'biais': 0.5, 'fin': 0.8}
 INNER_GAPS = {'com': 0.2}
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/narration.mp3
+# {id: (début, fin)} mesurés sur audio/narration.mp3 (silences > 0,12 s)
+MEASURED = {
+    'hook': (0.0, 4.87), 'com': (5.38, 8.23), 'nozick': (8.84, 17.92), 'twist': (18.53, 23.43),
+    'debr': (23.96, 25.82), 'res': (26.41, 30.19), 'biais': (30.74, 35.20), 'fin': (35.75, 39.3),
+}
 
 
 def estimate(rate=17.0, pause=0.3):
