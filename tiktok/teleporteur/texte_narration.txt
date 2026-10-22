@@ -1,0 +1,15 @@
+Un téléporteur, quatre questions. Compte tes oui sur tes doigts : à la fin, je te dis ce que tu es vraiment.
+
+Niveau un. Le téléporteur te détruit ici, et te reconstruit là-bas, atome par atome. Identique. Tu montes ?
+
+Niveau deux. Bug : ton original n'a pas été détruit. Vous êtes deux. Et l'original doit disparaître. Tu acceptes ?
+
+Niveau trois. On remplace tes neurones, un par un, par des neurones artificiels identiques. Tu ne sens rien. À la fin, il ne reste rien d'origine. Tu acceptes ?
+
+Niveau quatre. Une anesthésie générale : ta conscience s'éteint, puis se rallume. Tu acceptes ?
+
+Si tu as dit non au téléporteur, mais oui à l'anesthésie… qu'est-ce qui prouve que celui qui se réveille, c'est toi ?
+
+Zéro oui : tu crois qu'il y a quelque chose en toi qu'on ne peut pas copier. Quatre oui : pour toi, tu es une information. Entre les deux… tu es un paradoxe. Comme beaucoup de philosophes.
+
+Écris ton nombre de oui en commentaire.
