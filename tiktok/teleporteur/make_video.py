@@ -45,7 +45,11 @@ LINES = [
 SCENE_STARTS = {'q1': 0.6, 'q2': CHOOSE, 'q3': CHOOSE, 'q4': CHOOSE, 'piege': CHOOSE,
                 'profil': 0.6, 'cta': 0.6}
 INNER_GAPS = {}
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/narration.mp3
+# {id: (début, fin)} mesurés sur audio/narration.mp3 (silences > 0,12 s)
+MEASURED = {
+    'hook': (0.0, 5.90), 'q1': (6.53, 13.60), 'q2': (14.18, 21.43), 'q3': (21.97, 31.34),
+    'q4': (31.89, 37.59), 'piege': (38.20, 44.39), 'profil': (45.07, 55.85), 'cta': (56.48, 58.3),
+}
 
 
 def estimate(rate=17.0, pause=0.3):
