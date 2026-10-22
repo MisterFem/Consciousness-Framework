@@ -50,7 +50,13 @@ SCENE_STARTS = {'retiens': 0.3, 'regle': CHOOSE, 'r1': 0.6, 'r2': CHOOSE, 'r3': 
                 'tirage': CHOOSE, 'rouge': 0.6, 'bleu': 0.6, 'jaune': 0.6, 'vert': 0.6,
                 'rawls': 0.8, 'cta': 0.6}
 INNER_GAPS = {}
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/narration.mp3
+# {id: (début, fin)} mesurés sur audio/narration.mp3 (silences > 0,12 s)
+MEASURED = {
+    'hook': (0.0, 3.23), 'retiens': (3.69, 7.45), 'regle': (7.80, 14.63), 'r1': (15.30, 23.88),
+    'r2': (24.50, 34.19), 'r3': (34.79, 42.87), 'tirage': (43.53, 46.73), 'rouge': (47.37, 52.23),
+    'bleu': (52.82, 58.96), 'jaune': (59.53, 66.17), 'vert': (66.79, 72.39), 'rawls': (73.00, 82.49),
+    'cta': (82.94, 86.7),
+}
 
 
 def estimate(rate=17.0, pause=0.3):
