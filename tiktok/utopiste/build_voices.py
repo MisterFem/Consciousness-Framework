@@ -36,8 +36,15 @@ CUTS = {
 # ordre complet du texte, répliques du Sceptique comprises
 ORDER = {
     1: ['hook', 'intro', 'esc', 'panne', 'prop', 'obj', 'oui', 'autre', 'verre', 'fin'],
-    2: ['hook', 'intro', 'pas', 'buffett', 'mes', 'mamie', 'her', 'pas12', 'obj', 'univ', 'disc', 'fin'],
-    3: ['hook', 'intro', 'macron', 'coffre', 'lev1', 'lev2', 'lev3', 'bain', 'qui', 'prop', 'fin', 'cta'],
+    2: ['teaser', 'hook', 'intro', 'pas', 'buffett', 'mes', 'mamie', 'her', 'pas12', 'obj', 'univ', 'disc',
+        'fin'],
+    3: ['teaser', 'hook', 'intro', 'macron', 'coffre', 'lev1', 'lev2', 'lev3', 'bain', 'qui', 'prop', 'fin',
+        'cta'],
+}
+# ouverture : on rejoue d'abord le moment le plus frappant de l'épisode (extrait du narrateur)
+TEASER = {
+    2: (44.43, 47.59),   # « Pas 12 000. Pas 120 000. 12 millions. Au-dessus, c'est prélevé. »
+    3: (9.15, 12.17),    # « …franchement, ce serait assez hypocrite de décaler l'âge légal. »
 }
 
 
@@ -63,6 +70,9 @@ def rms(x):
 def build(ep):
     nar = load(os.path.join(HERE, 'audio', f'ep{ep}_narrateur.mp3'))
     pieces = {pid: nar[int(a * SR):int(b * SR)] for pid, a, b in CUTS[ep]}
+    if ep in TEASER:
+        a, b = TEASER[ep]
+        pieces['teaser'] = nar[int(a * SR):int(b * SR)]
     target = rms(nar)
     for pid in ORDER[ep]:
         if pid not in pieces:

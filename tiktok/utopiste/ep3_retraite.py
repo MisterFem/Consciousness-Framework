@@ -6,6 +6,7 @@
 from serie import *  # noqa: F403
 
 LINES = [
+    ('teaser', "…franchement, ce serait assez hypocrite de décaler l'âge légal."),
     ('hook', "C'est bien beau… mais la retraite à 60 ans, c'est impossible."),
     ('intro', "Épisode trois sur trois. Et d'abord, un petit rappel."),
     ('macron', "En 2019, Emmanuel Macron disait : « Tant qu'on n'a pas réglé le problème du chômage dans "
@@ -28,11 +29,12 @@ LINES = [
 ]
 # temps des phrases dans audio/ep3_voix.wav (généré par build_voices.py)
 MEASURED = {
-    'hook': (0.0, 4.32), 'intro': (4.67, 7.92), 'macron': (8.27, 20.68), 'coffre': (21.03, 28.89),
-    'lev1': (29.24, 34.57), 'lev2': (34.92, 38.73), 'lev3': (39.08, 44.7), 'bain': (45.05, 51.26),
-    'qui': (51.61, 56.23), 'prop': (56.58, 60.77), 'fin': (61.12, 71.16), 'cta': (71.51, 74.03),
+    'teaser': (0.0, 3.02), 'hook': (3.37, 7.69), 'intro': (8.04, 11.29), 'macron': (11.64, 24.05),
+    'coffre': (24.4, 32.26), 'lev1': (32.61, 37.94), 'lev2': (38.29, 42.1), 'lev3': (42.45, 48.07),
+    'bain': (48.42, 54.63), 'qui': (54.98, 59.6), 'prop': (59.95, 64.14), 'fin': (64.49, 74.53),
+    'cta': (74.88, 77.4),
 }
-EP = Episode(LINES, scene_starts={'intro': 0.2, 'macron': 0.3, 'coffre': 1.0, 'lev1': 0.8,
+EP = Episode(LINES, scene_starts={'hook': 0.4, 'intro': 0.2, 'macron': 0.3, 'coffre': 1.0, 'lev1': 0.8,
                                   'bain': 0.8, 'qui': 0.8, 'prop': 0.5, 'fin': 0.8},
              inner_gaps={'lev2': 0.3, 'lev3': 0.3, 'cta': 0.4},
              measured=MEASURED, audio=os.path.join(HERE, 'audio', 'ep3_voix.wav'))
@@ -62,11 +64,28 @@ def calendar_age(img, cx, y, age, col):
 
 
 # ================================================================ SCÈNES
+# ouverture : la citation d'abord ------------------------------------------------
+TQ_T = at('teaser', "hypocrite")
+SFX.append((sb('hook') - 0.6, 'impact', None))
+
+
+@scene(0.0, sb('hook'))
+def s_teaser(img, t):
+    episode_tag(img, 3, t)
+    lines = ("« ASSEZ", "HYPOCRITE", "DE DÉCALER", "L'ÂGE LÉGAL »")
+    for k, line in enumerate(lines):
+        draw_text(img, line, CX, TOP + 16 + k * 22, STAMP_RED if k == 1 and t >= TQ_T else WHITE,
+                  scale=2, maxw=170)
+    draw_text(img, "— EMMANUEL MACRON, 2019", CX, TOP + 108, LGREY, maxw=MAXW)
+    if t >= sb('hook') - 0.6:
+        rubber_stamp(img, "2023 : 64 ANS", CX, 196, t, sb('hook') - 0.6, angle=-8)
+
+
 SFX.append((0.0, 'impact', None))
 EP_T = start('intro')
 
 
-@scene(0.0, sb('macron'))
+@scene(sb('hook'), sb('macron'))
 def s_hook(img, t):
     episode_tag(img, 3, t)
     if t < EP_T:

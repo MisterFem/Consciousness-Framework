@@ -6,6 +6,7 @@
 from serie import *  # noqa: F403
 
 LINES = [
+    ('teaser', "Pas 12 000. Pas 120 000. 12 millions. Au-dessus, c'est prélevé."),
     ('hook', "C'est bien beau… mais qui va payer ?"),
     ('intro', "Épisode deux sur trois de notre vérification du programme de LFI. Leur réponse : "
               "ceux qui possèdent énormément."),
@@ -31,11 +32,12 @@ LINES = [
 ]
 # temps des phrases dans audio/ep2_voix.wav (généré par build_voices.py)
 MEASURED = {
-    'hook': (0.0, 2.89), 'intro': (3.24, 10.07), 'pas': (10.42, 15.72), 'buffett': (16.07, 25.62),
-    'mes': (25.97, 32.87), 'mamie': (33.22, 37.81), 'her': (38.16, 46.69), 'pas12': (47.04, 50.2),
-    'obj': (50.55, 53.02), 'univ': (53.37, 66.26), 'disc': (66.61, 71.44), 'fin': (71.79, 79.56),
+    'teaser': (0.0, 3.16), 'hook': (3.51, 6.4), 'intro': (6.75, 13.58), 'pas': (13.93, 19.23),
+    'buffett': (19.58, 29.13), 'mes': (29.48, 36.38), 'mamie': (36.73, 41.32), 'her': (41.67, 50.2),
+    'pas12': (50.55, 53.71), 'obj': (54.06, 56.53), 'univ': (56.88, 69.77), 'disc': (70.12, 74.95),
+    'fin': (75.3, 83.07),
 }
-EP = Episode(LINES, scene_starts={'intro': 0.2, 'pas': 0.5, 'buffett': 0.8, 'mes': 0.8, 'mamie': 0.8,
+EP = Episode(LINES, scene_starts={'hook': 0.4, 'intro': 0.2, 'pas': 0.5, 'buffett': 0.8, 'mes': 0.8, 'mamie': 0.8,
                                   'pas12': 0.4, 'obj': 0.8, 'univ': 0.4, 'disc': 0.6, 'fin': 0.8},
              inner_gaps={'her': 0.4},
              measured=MEASURED, audio=os.path.join(HERE, 'audio', 'ep2_voix.wav'))
@@ -67,12 +69,40 @@ def coin_tower(img, x, base, n):
 
 
 # ================================================================ SCÈNES
+# ouverture : le moment le plus frappant d'abord ----------------------------------
+T12 = [at('teaser', "Pas 12 000"), at('teaser', "Pas 120"), at('teaser', "12 millions."),
+       at('teaser', "Au-dessus")]
+impact(T12[2], 4)
+
+
+@scene(0.0, sb('hook'))
+def s_teaser(img, t):
+    episode_tag(img, 2, t)
+    draw_text(img, "L'HÉRITAGE", CX, TOP + 12, WHITE, scale=2, shadow=PURPLE)
+    draw_text(img, "MAXIMUM ?", CX, TOP + 34, YELLOW, scale=2, shadow=PURPLE)
+    d = ImageDraw.Draw(img)
+    for k, (ti, txt) in enumerate(((T12[0], "12 000 €"), (T12[1], "120 000 €"))):
+        if t >= ti:
+            y = TOP + 62 + k * 24
+            draw_text(img, txt, CX, y, LGREY, scale=2)
+            if t >= ti + 0.3:
+                d.line([(CX - 54, y + 12), (CX + 54, y + 6)], fill=STAMP_RED, width=2)
+    if t >= T12[2]:
+        p = pop(t, T12[2])
+        draw_text(img, "12 000 000 €", CX, int(162 + (1 - p) * 10), YELLOW, scale=2, shadow=PURPLE)
+        burst(img, t, T12[2], CX, 170)
+    if t >= T12[3]:
+        box(img, 194, 224)
+        draw_text(img, "AU-DESSUS :", CX, 198, WHITE)
+        draw_text(img, "PRÉLEVÉ", CX, 210, STAMP_RED)
+
+
 SFX.append((0.0, 'impact', None))
 EP_T = start('intro')
 TARGET_T = at('intro', "Leur réponse")
 
 
-@scene(0.0, sb('pas'))
+@scene(sb('hook'), sb('pas'))
 def s_hook(img, t):
     episode_tag(img, 2, t)
     if t < EP_T:
