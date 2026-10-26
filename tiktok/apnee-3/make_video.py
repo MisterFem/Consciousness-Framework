@@ -26,9 +26,10 @@ CX = 90
 TOP = 48
 
 # voix d'Hugo (audio/intro.mp3) — temps estimés, à recaler sur l'enregistrement
-INSPIRE_T = 4.6               # « Grande inspiration… »
-COUNT = [6.0, 6.8, 7.6]       # trois, deux, un
-INTRO = 8.3
+DOLPH_T, WHALE_T, MEGA_T = 1.45, 2.60, 6.12   # « le dauphin… la baleine… le Mégalodon »
+INSPIRE_T = 7.50              # « Grande inspiration… »
+COUNT = [9.05, 9.86, 10.73]   # trois, deux, un
+INTRO = 11.4
 HOLD = 75.0
 OUTRO = 12.0
 DUR = INTRO + HOLD + OUTRO
@@ -176,6 +177,8 @@ MEGA_SIL = silhouette(MEGALODON)
 
 # ================================================================ SCÈNES
 SFX.append((0.0, 'crash', None))
+SHAKES.append((MEGA_T, 3))
+SFX.append((MEGA_T, 'impact', None))
 for k, tc in enumerate(COUNT):
     SFX.append((tc, 'place', 20 - k * 4))
 SFX.append((INTRO, 'impact', None))
@@ -198,13 +201,16 @@ def s_intro(img, t):
     draw_text(img, "JUSQU'AU", CX, TOP + 10, WHITE, scale=2, shadow=PURPLE)
     draw_text(img, "MÉGALODON", CX, TOP + 32, YELLOW, scale=3, shadow=PURPLE, maxw=176)
     # rappel des boss précédents
-    if t > 1.0:
+    if t > DOLPH_T:
         for k, (spr, lab, sc) in enumerate(((DOLPHIN, "45 S", 2), (WHALE, "60 S", 1))):
+            if t < (DOLPH_T, WHALE_T)[k]:
+                continue
             x = 56 + k * 68
             put(img, spr, x, 128, sc)
             draw_text(img, lab, x, 140, LGREY)
             ImageDraw.Draw(img).line([(x - 16, 126), (x + 16, 132)], fill=GREEN, width=1)
-        draw_text(img, "DÉJÀ BATTUS ?", CX, 152, WHITE, maxw=150)
+        if t > 3.4:
+            draw_text(img, "DÉJÀ BATTUS ?", CX, 152, WHITE, maxw=150)
     if t < COUNT[0]:
         if t >= INSPIRE_T:
             draw_text(img, "INSPIRE...", CX, 184, WHITE, scale=2)
