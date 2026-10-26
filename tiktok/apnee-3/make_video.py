@@ -26,11 +26,12 @@ CX = 90
 TOP = 48
 
 # voix d'Hugo (audio/intro.mp3) — temps estimés, à recaler sur l'enregistrement
-# intro resserrée (~6,4 s) : pauses raccourcies, « le dauphin… la baleine… » retirés de la voix
-DOLPH_T, WHALE_T, MEGA_T = 0.5, 1.0, 2.97     # icônes du dauphin, de la baleine ; « le Mégalodon »
-INSPIRE_T = 3.92              # « Grande inspiration… »
-COUNT = [5.07, 5.55, 6.01]    # trois, deux, un
-INTRO = 6.5
+# intro resserrée (~7 s, voix à vitesse normale) : pauses raccourcies, « le dauphin… la baleine… »
+# retirés de la voix (les icônes restent à l'écran)
+DOLPH_T, WHALE_T, MEGA_T = 0.5, 1.0, 3.29     # icônes du dauphin, de la baleine ; « le Mégalodon »
+INSPIRE_T = 4.33              # « Grande inspiration… »
+COUNT = [5.60, 6.12, 6.61]    # trois, deux, un
+INTRO = 7.1
 HOLD = 75.0
 OUTRO = 12.0
 DUR = INTRO + HOLD + OUTRO
