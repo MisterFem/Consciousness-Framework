@@ -25,8 +25,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CX = 90
 TOP = 48
 
-COUNT = [1.2, 1.9, 2.6]   # 3, 2, 1
-INTRO = 3.3
+# voix d'Hugo (audio/intro.mp3) : « Niveau deux. Jusqu'à la baleine. Trois, deux, un ! »
+COUNT = [2.33, 3.02, 3.77]   # 3, 2, 1
+INTRO = 4.25
 HOLD = 60.0
 OUTRO = 7.5
 DUR = INTRO + HOLD + OUTRO
