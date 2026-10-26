@@ -26,10 +26,11 @@ CX = 90
 TOP = 48
 
 # voix d'Hugo (audio/intro.mp3) — temps estimés, à recaler sur l'enregistrement
-DOLPH_T, WHALE_T, MEGA_T = 1.45, 2.60, 6.12   # « le dauphin… la baleine… le Mégalodon »
-INSPIRE_T = 7.50              # « Grande inspiration… »
-COUNT = [9.05, 9.86, 10.73]   # trois, deux, un
-INTRO = 11.4
+# intro resserrée (~6,4 s) : pauses raccourcies, « le dauphin… la baleine… » retirés de la voix
+DOLPH_T, WHALE_T, MEGA_T = 0.5, 1.0, 2.97     # icônes du dauphin, de la baleine ; « le Mégalodon »
+INSPIRE_T = 3.92              # « Grande inspiration… »
+COUNT = [5.07, 5.55, 6.01]    # trois, deux, un
+INTRO = 6.5
 HOLD = 75.0
 OUTRO = 12.0
 DUR = INTRO + HOLD + OUTRO
@@ -209,7 +210,7 @@ def s_intro(img, t):
             put(img, spr, x, 128, sc)
             draw_text(img, lab, x, 140, LGREY)
             ImageDraw.Draw(img).line([(x - 16, 126), (x + 16, 132)], fill=GREEN, width=1)
-        if t > 3.4:
+        if t > 1.5:
             draw_text(img, "DÉJÀ BATTUS ?", CX, 152, WHITE, maxw=150)
     if t < COUNT[0]:
         if t >= INSPIRE_T:
