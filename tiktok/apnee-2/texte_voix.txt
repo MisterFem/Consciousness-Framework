@@ -1,0 +1,5 @@
+INTRO (fichier intro.mp3, 3 secondes maximum, aucun silence au début) :
+Niveau deux. Jusqu'à la baleine. Trois, deux, un !
+
+FIN (fichier fin.mp3) :
+Respire ! Soixante secondes, t'as des poumons de baleine. T'as lâché à quel animal ? Défie un pote.
