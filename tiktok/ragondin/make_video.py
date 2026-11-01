@@ -31,7 +31,12 @@ SAFE_B = 480        # au-dessus de la description
 
 IDS = ['virus', 'vie', 'plancton', 'pigeon', 'humain', 'eux', 'toi', 'action', 'fin']
 TXT = dict(zip(IDS, open(os.path.join(HERE, 'texte_narration.txt')).read().strip().split('\n\n')))
-MEASURED = None     # {id: (début, fin)} mesurés sur audio/narration.mp3
+# {id: (début, fin)} mesurés sur audio/narration.mp3 (pauses > 0,3 s, alignées sur la longueur du texte)
+MEASURED = {
+    'virus': (0.0, 5.61), 'vie': (5.99, 9.82), 'plancton': (10.40, 17.58), 'pigeon': (18.13, 23.64),
+    'humain': (24.04, 31.00), 'eux': (31.46, 39.51), 'toi': (39.84, 44.75), 'action': (45.07, 51.51),
+    'fin': (51.88, 53.30),
+}
 
 
 def estimate(rate=16.5, pause=0.45):
@@ -400,9 +405,9 @@ def sc_vie(img, t):
         star = [(57, y + 18), (62, y + 32), (76, y + 32), (65, y + 41), (69, y + 55), (57, y + 46), (45, y + 55),
                 (49, y + 41), (38, y + 32), (52, y + 32)]
         d.polygon(star, fill=(25, 25, 40))
-        text(img, "SUCCÈS DÉBLOQUÉ", y + 12, (255, 210, 60), scale=2, cx=210, maxw=240, shadow=None)
+        text(img, "SUCCÈS DÉBLOQUÉ", y + 12, (255, 210, 60), scale=2, cx=210, maxw=240, shadow=None, world=True)
         if t >= at('vie', "une petite"):
-            text(img, "PETITE DIARRHÉE", y + 38, (255, 255, 255), scale=3, cx=210, maxw=260, shadow=None)
+            text(img, "PETITE DIARRHÉE", y + 38, (255, 255, 255), scale=3, cx=210, maxw=260, shadow=None, world=True)
         sparkles(img, t, CX, y + 37, 170, 16)
 
 
@@ -430,10 +435,10 @@ def sc_plancton(img, t):
     if t >= at('plancton', "Dans un seul"):
         lt = clamp((t - at('plancton', "il y a plus")) / 1.0)
         d.rounded_rectangle([24, 400, W - 24, 500], radius=8, fill=(5, 20, 50))
-        text(img, "1 LITRE D'EAU DE MER", 410, (200, 240, 255), scale=2)
+        text(img, "1 LITRE D'EAU DE MER", 410, (200, 240, 255), scale=2, world=True)
         for k, (lab, v, c) in enumerate((("VIRUS", 1.0, (140, 255, 110)), ("HUMAINS", 0.8, (255, 200, 150)))):
             y = 440 + k * 26
-            text(img, lab, y, c, scale=2, cx=78, maxw=100, shadow=None)
+            text(img, lab, y, c, scale=2, cx=78, maxw=100, shadow=None, world=True)
             d.rectangle([130, y, 130 + int(190 * v * lt), y + 14], fill=c)
 
 
@@ -478,7 +483,7 @@ def sc_humain(img, t):
         p = ease_out_back((t - at('humain', "et regarder")) / 0.4)
         phone(img, CX, 290 + (1 - min(p, 1)) * 60, 0.9, screen=(30, 20, 70))
         ragondin(img, CX, 300, 0.32, t)
-        text(img, "CETTE VIDÉO", 350, (255, 241, 232), scale=2)
+        text(img, "CETTE VIDÉO", 362, (255, 241, 232), scale=2)
 
 
 def sc_eux(img, t):
@@ -534,8 +539,8 @@ def sc_toi(img, t):
         y = cy + 18 + (k * 13 + int(t * 200)) % 40
         d.line([x, y, x - 2, y + 6], fill=(140, 170, 230), width=2)
     d.rounded_rectangle([40, 150, W - 40, 220], radius=10, fill=(245, 245, 250))
-    text(img, "MESSAGE", 160, (60, 60, 80), scale=2, shadow=None)
-    text(img, "VU À 14:32", 186, (150, 150, 170), scale=3, shadow=None)
+    text(img, "MESSAGE", 160, (60, 60, 80), scale=2, shadow=None, world=True)
+    text(img, "VU À 14:32", 186, (150, 150, 170), scale=3, shadow=None, world=True)
     text(img, "RUMINER...", 520, (180, 190, 230), scale=3)
 
 
