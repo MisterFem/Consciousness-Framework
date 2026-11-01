@@ -72,9 +72,7 @@ a = np.clip((v - 0.8) * 1.2 + bay * 0.1, 0, 0.45)
 img = Image.composite(Image.new('RGB', (W, H), (10, 5, 20)), img, Image.fromarray((a * 255).astype(np.uint8)))
 
 # texte dans la zone sûre (centre, 386x106)
-draw_text(img, "TIKETI", W // 2, 128, (255, 244, 225), scale=4, maxw=380, shadow=(80, 30, 70))
-draw_text(img, "DES EXPÉRIENCES ET DES DILEMMES QUI RETOURNENT LE CERVEAU", W // 2, 178, (255, 236, 210),
-          scale=1, maxw=380, shadow=(60, 20, 50))
+draw_text(img, "TIKETI", W // 2, 140, (255, 244, 225), scale=4, maxw=380, shadow=(80, 30, 70))
 
 out = os.path.join(HERE, 'banniere_youtube.png')
 img.resize((W * S, H * S), Image.NEAREST).save(out)
