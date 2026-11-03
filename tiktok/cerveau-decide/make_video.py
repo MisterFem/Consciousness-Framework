@@ -23,7 +23,12 @@ from fine_engine import (W, H, CX, TOP, SFX, Story, gradient, ell, text, pop_wor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IDS = ['hook', 'attends', 'libet', 'electrodes', 'scanner', 'qui', 'veto', 'encore', 'fin']
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/narration.mp3
+# {id: (début, fin)} mesurés sur audio/narration.mp3 (pauses > 0,3 s, alignées sur la longueur du texte)
+MEASURED = {
+    'hook': (0.0, 4.80), 'attends': (5.11, 8.87), 'libet': (9.45, 17.94), 'electrodes': (18.36, 26.03),
+    'scanner': (26.57, 37.55), 'qui': (38.07, 41.85), 'veto': (42.23, 50.38), 'encore': (50.84, 55.60),
+    'fin': (55.96, 59.1),
+}
 ST = Story(IDS, os.path.join(HERE, 'texte_narration.txt'), MEASURED)
 at, start = ST.at, ST.start
 DUR = ST.end + 1.6
@@ -104,7 +109,7 @@ def bg_deep(key='deep'):
 
 
 # ================================================================ scènes
-SCROLL_T = at('hook', "Ton cerveau") + 0.9        # la vidéo « se scrolle »
+SCROLL_T = 3.6                                     # la vidéo « se scrolle » pendant « tu ne le sais pas encore »
 SNAP_T = start('attends')                          # « Attends. »
 
 
@@ -131,10 +136,10 @@ def sc_hook(img, t):
     # le pouce qui s'approche de l'écran
     pop_word(img, "TU VAS SCROLLER", t, 0.0, TOP, WHITE, scale=4)
     pop_word(img, "CETTE VIDÉO", t, 0.25, TOP + 42, CYAN, scale=4)
-    if t >= at('hook', "Ton cerveau"):
-        fade_word(img, "TON CERVEAU L'A DÉJÀ DÉCIDÉ", t, at('hook', "Ton cerveau"), 450, MAG, scale=2, dur=0.3)
-    if t >= at('hook', "Toi,"):
-        fade_word(img, "TOI, TU NE LE SAIS PAS ENCORE", t, at('hook', "Toi,"), 474, WHITE, scale=2, dur=0.3)
+    if t >= 1.62:
+        fade_word(img, "TON CERVEAU L'A DÉJÀ DÉCIDÉ", t, 1.62, 450, MAG, scale=2, dur=0.3)
+    if t >= 3.38:
+        fade_word(img, "TOI, TU NE LE SAIS PAS ENCORE", t, 3.38, 474, WHITE, scale=2, dur=0.3)
 
 
 def sc_attends(img, t):
@@ -142,7 +147,7 @@ def sc_attends(img, t):
     network(img, t, MAG, energy=1.0, drift=2)
     brain(img, CX, 330, 1.0, t, MAG, fill=(40, 10, 40))
     pop_word(img, "ATTENDS.", t, start('attends'), TOP, WHITE, scale=6)
-    c0 = at('attends', "Reste")
+    c0 = 5.80
     if t >= c0:
         n = 3 - int(min(2.99, (t - c0) / 0.7))
         pop_word(img, str(n), t, c0 + (3 - n) * 0.7, 250, GOLD, scale=8)
@@ -380,7 +385,7 @@ def frame(t):
 SFX.append((0.0, 'impact', None))
 SFX.append((SCROLL_T, 'whoosh', None))
 SFX.append((SNAP_T, 'impact', None))
-c0 = at('attends', "Reste")
+c0 = 5.80
 for k in range(3):
     SFX.append((c0 + k * 0.7, 'place', 10 + k * 4))
 SFX.append((start('libet'), 'coin', None))
