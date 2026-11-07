@@ -31,7 +31,12 @@ from fine_engine import (W, H, CX, TOP, SFX, Story, gradient, ell, text, pop_wor
 HERE = os.path.dirname(os.path.abspath(__file__))
 IDS = ['flam', 'scep1', 'intro', 'plan', 'cout', 'uranium', 'dechets', 'scep2', 'reponse', 'rte', 'verdict',
        'cta']
-MEASURED = None  # {id: (début, fin)} mesurés sur audio/narration.mp3
+# temps des paragraphes dans audio/narration.wav (assemblé par build_voice.py : Hugo + le Sceptique)
+MEASURED = {
+    'flam': (0.0, 7.6), 'scep1': (7.95, 11.73), 'intro': (12.08, 20.54), 'plan': (20.89, 31.67),
+    'cout': (32.02, 42.57), 'uranium': (42.92, 52.18), 'dechets': (52.53, 63.54), 'scep2': (63.89, 67.47),
+    'reponse': (67.82, 78.79), 'rte': (79.14, 90.53), 'verdict': (90.88, 102.53), 'cta': (102.88, 106.2),
+}
 ST = Story(IDS, os.path.join(HERE, 'texte_narration.txt'), MEASURED)
 at, start = ST.at, ST.start
 DUR = ST.end + 1.6
@@ -529,4 +534,4 @@ SFX.append((at('cta', "Dis-le"), 'coin', None))
 
 if __name__ == '__main__':
     render(os.path.join(HERE, 'nucleaire_tiktok.mp4'), DUR, frame,
-           os.path.join(HERE, 'audio', 'narration.mp3'), ST.ph, ST.end)
+           os.path.join(HERE, 'audio', 'narration.wav'), ST.ph, ST.end)
