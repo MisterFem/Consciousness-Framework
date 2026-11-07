@@ -29,13 +29,13 @@ from fine_engine import (W, H, CX, TOP, SFX, Story, gradient, ell, text, pop_wor
                          render, clamp, ease_io, ease_out_back, BLACK, BAYER, draw_text)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-IDS = ['flam', 'scep1', 'intro', 'plan', 'cout', 'uranium', 'dechets', 'scep2', 'reponse', 'rte', 'verdict',
+IDS = ['hook', 'scep1', 'intro', 'plan', 'cout', 'uranium', 'dechets', 'scep2', 'reponse', 'rte', 'verdict',
        'cta']
 # temps des paragraphes dans audio/narration.wav (assemblé par build_voice.py : Hugo + le Sceptique)
 MEASURED = {
-    'flam': (0.0, 7.6), 'scep1': (7.95, 11.73), 'intro': (12.08, 20.54), 'plan': (20.89, 31.67),
-    'cout': (32.02, 42.57), 'uranium': (42.92, 52.18), 'dechets': (52.53, 63.54), 'scep2': (63.89, 67.47),
-    'reponse': (67.82, 78.79), 'rte': (79.14, 90.53), 'verdict': (90.88, 102.53), 'cta': (102.88, 106.2),
+    'hook': (0.0, 11.12), 'scep1': (11.47, 15.25), 'intro': (15.6, 24.06), 'plan': (24.41, 35.19),
+    'cout': (35.54, 46.09), 'uranium': (46.44, 55.7), 'dechets': (56.05, 67.06), 'scep2': (67.41, 70.99),
+    'reponse': (71.34, 82.31), 'rte': (82.66, 94.05), 'verdict': (94.4, 106.05), 'cta': (106.4, 109.7),
 }
 ST = Story(IDS, os.path.join(HERE, 'texte_narration.txt'), MEASURED)
 at, start = ST.at, ST.start
@@ -224,24 +224,98 @@ def panel(img, y0, y1, x0=18, x1=W - 18, a=200):
 
 
 # ================================================================ scènes
-def sc_flam(img, t):
-    a = start('flam')
-    # travelling avant lent sur la centrale de Flamanville au bord de la mer
-    w = world(t, 'nuc')
-    img.paste(pan(w, 60 + (t - a) * 6))
-    pop_word(img, "FLAMANVILLE", t, a, TOP, CREAM, scale=4)
-    b1, b2, b3 = at('flam', "Budget"), at('flam', "Facture"), at('flam', "Et douze")
-    if t >= b1:
-        panel(img, 400, 520)
-        text(img, "PRÉVU (EUROS)", 412, (200, 200, 230), scale=2, cx=96, maxw=150)
-        pop_word(img, "3 MDS", t, b1 + 0.4, 434, GREEN, scale=4, cx=96, maxw=150)
-    if t >= b2:
-        text(img, "FACTURE", 412, (255, 200, 200), scale=2, cx=262)
-        p = clamp((t - b2 - 0.3) / 1.2)
-        text(img, f"{3 + 20.7 * ease_io(p):.1f} MDS".replace('.', ','), 434, RED, scale=4, cx=262, maxw=170)
-    if t >= b3:
-        pop_word(img, "+ 12 ANS DE RETARD", t, b3, 486, GOLD, scale=2)
-        text(img, "COUR DES COMPTES, 2025", 538, (170, 170, 200), scale=1)
+# temps de l'accroche dans audio/hook.mp3 (repérés aux pauses)
+H_SWITCH, H_ROCK, H_WASTE, H_ELSE = 0.0, 1.92, 6.68, 9.61
+
+
+def bedroom(img, t, lit, window):
+    """Chambre : mur, interrupteur, lampe ; `window` = image collée dans la fenêtre."""
+    img.paste(gradient([(0, (18, 14, 32)), (1, (30, 22, 40))], 'room_dark', steps=6))
+    d = ImageDraw.Draw(img)
+    wx0, wy0, wx1, wy1 = 40, 150, 230, 360
+    img.paste(window.resize((wx1 - wx0, wy1 - wy0), Image.NEAREST), (wx0, wy0))
+    d.rectangle([wx0, wy0, wx1, wy1], outline=(70, 50, 60), width=8)
+    d.line([(wx0 + wx1) // 2, wy0, (wx0 + wx1) // 2, wy1], fill=(70, 50, 60), width=6)
+    d.rectangle([0, 470, W, H], fill=(45, 30, 40))
+    # lampe
+    lx, ly = 290, 300
+    d.rectangle([lx - 3, ly, lx + 3, 470], fill=(90, 80, 90))
+    d.polygon([(lx - 30, ly), (lx + 30, ly), (lx + 18, ly - 40), (lx - 18, ly - 40)],
+              fill=(255, 225, 150) if lit else (80, 70, 80))
+    if lit:
+        glow = Image.new('RGB', (W, H), (255, 200, 120))
+        m = Image.new('L', (W, H), 0)
+        ImageDraw.Draw(m).ellipse([lx - 150, ly - 140, lx + 150, ly + 170], fill=int(80 * lit))
+        img.paste(glow, (0, 0), m.filter(ImageFilter.GaussianBlur(40)))
+    # interrupteur et doigt
+    sx, sy = 300, 420
+    d.rounded_rectangle([sx - 14, sy - 20, sx + 14, sy + 20], radius=4, fill=(220, 215, 205))
+    d.rectangle([sx - 5, sy - (12 if lit else -2), sx + 5, sy + (2 if lit else 12)], fill=(180, 175, 165))
+
+
+def mine_scene(t):
+    im = gradient([(0, (70, 40, 80)), (0.4, (190, 100, 80)), (0.55, (220, 140, 90)), (1, (110, 60, 50))],
+                  'desert', steps=9)
+    d = ImageDraw.Draw(im)
+    ell(d, 280, 250, 18, 18, (255, 220, 170))
+    for k in range(6):
+        y = 330 + k * 26
+        d.ellipse([CX - 150 + k * 22, y - 18, CX + 150 - k * 22, y + 18], outline=(150, 90, 60), width=3)
+    d.ellipse([CX - 40, 470, CX + 40, 500], fill=(90, 50, 40))
+    x = (t * 40) % 260 + 50
+    d.rectangle([x, 300, x + 30, 316], fill=(230, 190, 40))
+    ell(d, x + 7, 318, 5, 5, INKC)
+    ell(d, x + 24, 318, 5, 5, INKC)
+    return im
+
+
+def sc_hook(img, t):
+    if t < H_ROCK:                                  # le geste
+        lit = clamp((t - 0.7) / 0.15)
+        bedroom(img, t, lit, pano_sky('night', NIGHT).crop((100, 100, 290, 310)))
+        pop_word(img, "APPUIE SUR", t, 0.0, TOP, CREAM, scale=3)
+        pop_word(img, "UN INTERRUPTEUR", t, 0.35, TOP + 32, GOLD, scale=3)
+        return
+    if t < H_ROCK + 1.8:                            # le courant remonte jusqu'aux centrales
+        p = ease_io((t - H_ROCK) / 1.8)
+        w = world(t, 'nuc')
+        img.paste(pan(w, 700 - p * 620))
+        d = ImageDraw.Draw(img)
+        for k in range(8):
+            u = (t * 1.2 + k / 8) % 1
+            x = W - u * W
+            d.rectangle([x, 300 + math.sin(u * 9) * 4, x + 6, 303 + math.sin(u * 9) * 4], fill=(255, 240, 140))
+        d.line([0, 302, W, 302], fill=(60, 50, 70), width=1)
+        fade_word(img, "POUR QUE CETTE LUMIÈRE S'ALLUME...", t, H_ROCK, TOP, CREAM, scale=2, dur=0.3)
+        return
+    if t < H_WASTE - 0.2:                           # la mine d'uranium
+        img.paste(mine_scene(t))
+        pop_word(img, "UN CAILLOU", t, H_ROCK + 1.8, TOP, CREAM, scale=4)
+        pop_word(img, "KAZAKHSTAN · NIGER", t, H_ROCK + 2.6, TOP + 50, GOLD, scale=2)
+        text(img, "URANIUM 100 % IMPORTÉ", 540, CREAM, scale=2)
+        return
+    if t < H_ELSE - 0.2:                            # les déchets sous terre
+        img.paste(gradient([(0, (30, 25, 45)), (0.35, (70, 50, 50)), (1, (15, 10, 15))], 'sous', steps=8))
+        d = ImageDraw.Draw(img)
+        for y in range(240, H, 26):
+            d.line([0, y + math.sin(y) * 4, W, y + 6], fill=(50, 35, 40), width=3)
+        bx, by = CX, 380
+        g = 0.6 + 0.4 * math.sin(t * 4)
+        ell(d, bx, by, 80, 80, tuple(int(c * g * 0.45) for c in (120, 255, 120)))
+        d.rounded_rectangle([bx - 30, by - 46, bx + 30, by + 46], radius=6, fill=(230, 200, 40))
+        for yy in (by - 28, by + 28):
+            d.rectangle([bx - 30, yy - 2, bx + 30, yy + 2], fill=(60, 50, 20))
+        d.polygon([(bx, by - 14), (bx - 13, by + 9), (bx + 13, by + 9)], fill=INKC)
+        p = clamp((t - H_WASTE) / 1.6)
+        n = int(1000 + 99000 * ease_io(p))
+        pop_word(img, "DES DÉCHETS", t, H_WASTE - 0.1, TOP, (150, 255, 150), scale=4)
+        text(img, f"DANGEREUX {n:,} ANS".replace(',', ' '), 520, CREAM, scale=2)
+        return
+    # retour à la chambre : par la fenêtre, des éoliennes au soleil couchant
+    view = pan(world(t, 'enr'), 640).crop((60, 160, 300, 470))
+    bedroom(img, t, 1.0, view)
+    pop_word(img, "ET SI ON POUVAIT", t, H_ELSE, TOP, CREAM, scale=3)
+    pop_word(img, "L'ALLUMER AUTREMENT ?", t, H_ELSE + 0.6, TOP + 32, GREEN, scale=3)
 
 
 def sc_scep1(img, t):
@@ -308,14 +382,20 @@ def sc_cout(img, t):
     base = 470
     d.rectangle([70, base - 26, 140, base], fill=GREEN)
     text(img, "PRÉVU", base + 8, GREEN, scale=2, cx=105, world=True)
+    text(img, "3,3 MDS", base - 46, GREEN, scale=2, cx=105, world=True)
+    text(img, "FLAMANVILLE", 162, (200, 200, 230), scale=2)
     p = clamp((t - at('cout', "explosent")) / 1.5) if t >= at('cout', "explosent") else 0
     h = int(26 + 200 * ease_io(p))
     d.rectangle([220, base - h, 290, base], fill=RED)
     text(img, "RÉEL", base + 8, RED, scale=2, cx=255, world=True)
+    if p > 0:
+        text(img, f"{3.3 + 20.4 * ease_io(p):.1f} MDS".replace('.', ','), base - h - 34, RED, scale=2, cx=255,
+             world=True)
     if p >= 1:
         for k in range(6):
             ang = k * 1.05 + t
-            d.line([255, base - h, 255 + math.cos(ang) * 22, base - h + math.sin(ang) * 22], fill=GOLD, width=2)
+            d.line([255 + math.cos(ang) * 8, base - h + math.sin(ang) * 8,
+                    255 + math.cos(ang) * 22, base - h + math.sin(ang) * 22], fill=GOLD, width=2)
     if t >= at('cout', "La Cour"):
         panel(img, 520, 560)
         text(img, "RENTABILITÉ « MÉDIOCRE »", 532, CREAM, scale=2)
@@ -481,10 +561,10 @@ def sc_cta(img, t):
     pop_word(img, "DIS-LE EN COMMENTAIRE", t, at('cta', "Dis-le"), 500, GOLD, scale=2)
 
 
-SCENES = {'flam': sc_flam, 'scep1': sc_scep1, 'intro': sc_intro, 'plan': sc_plan, 'cout': sc_cout,
+SCENES = {'hook': sc_hook, 'scep1': sc_scep1, 'intro': sc_intro, 'plan': sc_plan, 'cout': sc_cout,
           'uranium': sc_uranium, 'dechets': sc_dechets, 'scep2': sc_scep2, 'reponse': sc_reponse, 'rte': sc_rte,
           'verdict': sc_verdict, 'cta': sc_cta}
-CAMERA = {'flam': (1.12, 1.0, 200, 380), 'scep1': (1.0, 1.06, 250, 300), 'intro': (1.0, 1.0, CX, 320),
+CAMERA = {'hook': (1.0, 1.0, CX, 320), 'scep1': (1.0, 1.06, 250, 300), 'intro': (1.0, 1.0, CX, 320),
           'plan': (1.0, 1.0, CX, 320), 'cout': (1.0, 1.05, 255, 360), 'uranium': (1.0, 1.08, 180, 250),
           'dechets': (1.06, 1.0, CX, 400), 'scep2': (1.0, 1.06, 250, 300), 'reponse': (1.0, 1.0, CX, 320),
           'rte': (1.0, 1.04, CX, 380), 'verdict': (1.08, 1.0, CX, 300), 'cta': (1.0, 1.0, CX, 320)}
@@ -518,8 +598,11 @@ def frame(t):
     return img
 
 
-SFX.append((0.0, 'impact', None))
-SFX.append((at('flam', "Facture"), 'impact', None))
+SFX.append((0.7, 'place', 2))
+SFX.append((H_ROCK, 'whoosh', None))
+SFX.append((H_ROCK + 1.8, 'impact', None))
+SFX.append((H_WASTE - 0.2, 'impact', None))
+SFX.append((H_ELSE - 0.2, 'whoosh', None))
 SFX.append((start('scep1'), 'whoosh', None))
 SFX.append((at('intro', "Alors on"), 'impact', None))
 for key in ("Leur plan", "fermer les", "passer à"):
