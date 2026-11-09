@@ -1,0 +1,45 @@
+TROIS VOIX À GÉNÉRER (ElevenLabs) — un fichier par personnage, à déposer dans tiktok/plume-crayon/audio/
+
+Règle : une réplique par paragraphe, avec une pause nette (~1 s) entre chaque. Pas de silence au début.
+
+=== 1) narrateur.mp3 — voix de conteur, chaude, posée, un peu malicieuse ===
+
+Monsieur Stylo-Plume n'avait jamais fait une seule faute. Et c'était bien ça, son problème.
+
+Pointe en or, encre de Chine. Il ne signait que l'important. Et sur ce bureau, une seule chose le dérangeait.
+
+Petit Crayon avait remarqué ces regards. Et il avait sa petite idée.
+
+Un soir, Lou doit écrire la lettre la plus dure qui soit : une lettre pour demander pardon.
+
+Elle prend Monsieur Stylo-Plume. Premier mot… une rature. Indélébile.
+
+Deuxième essai. Troisième. Les boules de papier s'entassent.
+
+Alors Lou prend Petit Crayon. Elle écrit, se trompe, gomme. Et recommence.
+
+À chaque erreur, la magnifique gomme rapetisse. Petit Crayon ne dit rien.
+
+Quand enfin les mots sont justes, Monsieur Stylo-Plume repasse par-dessus. Parfait.
+
+Cette nuit-là, Monsieur Stylo-Plume regarde ce qui reste de la gomme.
+
+Le lendemain, la lettre est partie. Personne n'a vu les brouillons, ni les miettes de gomme.
+
+Morale : ceux qui se moquent de ta gomme n'ont souvent jamais eu le droit de se tromper. Alors use-la. C'est comme ça qu'on écrit ce qui reste.
+
+=== 2) plume.mp3 — Monsieur Stylo-Plume : vieux gentleman snob, voix grave et pincée ===
+
+Ce petit crayon, avec sa gomme sur la tête… Fort ridicule.
+
+Tu avais raison. J'étais jaloux. Pas de ta gomme… Du droit de te tromper.
+
+(NOTE, à ne pas faire lire — 2e réplique : plus basse, sincère, presque à voix basse)
+
+=== 3) crayon.mp3 — Petit Crayon : voix jeune, espiègle, sûre d'elle ===
+
+Il est jaloux. Jaloux de ma magnifique gomme.
+
+Et moi de toi. Tout ce que j'écris finit par s'effacer.
+
+(NOTE, à ne pas faire lire — 2e réplique : douce, un peu triste)
